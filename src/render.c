@@ -21,7 +21,7 @@
 static const int   msaa = 1;
 static const float FONTLW = 1.0f / FONTW,
                    FONTLH = 1.0f / FONTH,
-                   FPSX = 0.01f,
+                   FPSX = 0.001f,
                    FPSY = 1.0f - FPSH,
                    FPSW = 0.05f,
                    TITLEX = 0.2f,
@@ -52,11 +52,8 @@ static GLuint fbos[2], fbostex[2];
 
 static void delete_fbos()
 {
-#if MSAA
-    glDeleteFramebuffers(2, fbos);
-    glDeleteTextures(2, fbostex);
-#endif
-
+  glDeleteFramebuffers(2, fbos);
+  glDeleteTextures(2, fbostex);
   glDeleteRenderbuffers(1, &fborbuf);
   glDeleteBuffers(1, &fbovbo);
 }
@@ -71,14 +68,8 @@ static int generate_fbos(int w, int h)
 
   winw = w;
   winh = h;
-
-#if MSAA
-    msaaw = MSAA * w;
-    msaah = MSAA * h;
-#else
-    msaaw = w;
-    msaah = h;
-#endif
+  msaaw = msaa * w;
+  msaah = msaa * h;
 
   glViewport(0, 0, msaaw, msaah);
   glGenTextures(2, fbostex);
@@ -89,8 +80,8 @@ static int generate_fbos(int w, int h)
     {
       // texture
       glBindTexture(GL_TEXTURE_2D, fbostex[i]);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, msaaw, msaah, 0,
                    GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
@@ -286,13 +277,6 @@ static int render_text()
 static void render_direct()
 {
   render_text();
-
-  shader_use(PROG_DIRECT);
-  glVertexAttrib4f(COLOR_ATTRIB, 0.1f, 1.0f, 0.1f, 1.0f);
-  glBegin(GL_LINES);
-  glVertex2f(0.0f, 0.0f);
-  glVertex2f(1.0f, 1.0f);
-  glEnd();
 }
 
 static void render_passtwo()
@@ -323,7 +307,7 @@ static void render_passthree()
   glViewport(0, 0, winw, winh);
 
   glBlitFramebuffer(0, 0, msaaw, msaah, 0, 0, winw, winh,
-                    GL_COLOR_BUFFER_BIT, GL_LINEAR);
+                    GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
   glViewport(0, 0, msaaw, msaah);
 }

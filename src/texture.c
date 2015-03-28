@@ -79,8 +79,8 @@ static int create_texture(int index, const char *file)
   glBindTexture(GL_TEXTURE_2D, tex);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                  GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                  GL_NEAREST_MIPMAP_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   if (read_send_tex(file))
     {
       printf("send tex err\n");
