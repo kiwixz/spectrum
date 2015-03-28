@@ -1,0 +1,5 @@
+bin/
+*~
+
+# audio files for testing
+*.m4a

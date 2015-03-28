@@ -1,0 +1,3 @@
+#!/bin/bash
+
+~/Programmes/crunch $* -fileformat dds -unflip -yflip -DXT5
