@@ -34,7 +34,7 @@ typedef enum
   PROG_DIRECTTEX = 2,
   PROG_TEXT = 3,
   PROG_BARSONE = 4,
-  PROG_PASSTWO = 5,
+  PROG_PASS = 5,
   PROG_BARSTWO = 6
 } Program;
 

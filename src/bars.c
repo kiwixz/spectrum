@@ -28,8 +28,8 @@
   barsvert[index + a] = barsvert[index + b] = barsvert[index + c]
 
 static const float barsminh = 0.005f,
-                   barsd = 0.01f,
-                   spacebetween = 0.009f,
+                   barsd = 0.0f,
+                   spacebetween = 0.005f,
                    spaceside = 0.1f;
 
 static float   barsw;

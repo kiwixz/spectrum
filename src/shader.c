@@ -141,10 +141,10 @@ int shader_init()
                          "shaders/barsone.vert", "shaders/barsone.frag"))
       || (create_program(PROG_TEXT,
                          "shaders/text.vert", "shaders/text.frag"))
-      || (create_program(PROG_PASSTWO,
-                         "shaders/passtwo.vert", "shaders/passtwo.frag"))
+      || (create_program(PROG_PASS,
+                         "shaders/pass.vert", "shaders/pass.frag"))
       || (create_program(PROG_BARSTWO,
-                         "shaders/passtwo.vert", "shaders/barstwo.frag")))
+                         "shaders/pass.vert", "shaders/barstwo.frag")))
     return -1;
 
   return 0;
@@ -177,8 +177,8 @@ void shader_set_uniforms(GLfloat *matrix)
   shader_send_matrix(PROG_BARSONE, matrix);
   shader_set_texture(PROG_BARSONE, 0);
 
-  shader_use(PROG_PASSTWO);
-  shader_set_texture(PROG_PASSTWO, 0);
+  shader_use(PROG_PASS);
+  shader_set_texture(PROG_PASS, 0);
 
   shader_use(PROG_BARSTWO);
   shader_set_texture(PROG_BARSTWO, 0);

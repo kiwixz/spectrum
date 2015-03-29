@@ -33,11 +33,11 @@
 #define BACKGROUND 0.1f, 0.1f, 0.1f
 #define FONTW 32
 #define FONTH 8
-#define FPSH 0.024f
+#define FPSH 0.025f
 #define TITLEY 0.1f
 #define TIMEW 0.2f
 
-static const int   msaa = 1;
+static const int   ssaa = 2;
 static const float FONTLW = 1.0f / FONTW,
                    FONTLH = 1.0f / FONTH,
                    FPSX = 0.001f,
@@ -65,21 +65,20 @@ static const GLfloat FBOVBOVERT[2 * 12] = {
   0.0f, 1.0f
 };
 
-static int    winw, winh, msaaw, msaah;
-static GLuint fbovbo, fborbuf;
-static GLuint fbos[2], fbostex[2];
+static int    winw, winh, ssaaw, ssaah;
+static GLuint fbovbo;
+static GLuint fbos[2], fbostex[2], fbosrbuf[2];
 
 static void delete_fbos()
 {
   glDeleteFramebuffers(2, fbos);
   glDeleteTextures(2, fbostex);
-  glDeleteRenderbuffers(1, &fborbuf);
+  glDeleteRenderbuffers(2, fbosrbuf);
   glDeleteBuffers(1, &fbovbo);
 }
 
 static int generate_fbos(int w, int h)
 {
-  int    i;
   GLenum colat;
 
   if (fbos[0])
@@ -87,49 +86,62 @@ static int generate_fbos(int w, int h)
 
   winw = w;
   winh = h;
-  msaaw = msaa * w;
-  msaah = msaa * h;
+  ssaaw = ssaa * w;
+  ssaah = ssaa * h;
 
-  glViewport(0, 0, msaaw, msaah);
-  glGenTextures(2, fbostex);
   glGenFramebuffers(2, fbos);
+  glGenTextures(2, fbostex);
+  glGenRenderbuffers(2, fbosrbuf);
 
   colat = GL_COLOR_ATTACHMENT0;
-  for (i = 0; i < 2; ++i)
-    {
-      // texture
-      glBindTexture(GL_TEXTURE_2D, fbostex[i]);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, msaaw, msaah, 0,
-                   GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-      // framebuffer
-      glBindFramebuffer(GL_FRAMEBUFFER, fbos[i]);
-      glFramebufferTexture2D(GL_FRAMEBUFFER, colat,
-                             GL_TEXTURE_2D, fbostex[i], 0);
-      glDrawBuffers(1, &colat);
-    }
+  // texture
+  glBindTexture(GL_TEXTURE_2D, fbostex[0]);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+               GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-  // render buffer
+  // framebuffer
   glBindFramebuffer(GL_FRAMEBUFFER, fbos[0]);
-  glGenRenderbuffers(1, &fborbuf);
-  glBindRenderbuffer(GL_RENDERBUFFER, fborbuf);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, msaaw, msaah);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, colat,
+                         GL_TEXTURE_2D, fbostex[0], 0);
+  glDrawBuffers(1, &colat);
+
+  // renderbuffer
+  glBindRenderbuffer(GL_RENDERBUFFER, fbosrbuf[0]);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, w, h);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                            GL_RENDERBUFFER, fborbuf);
+                            GL_RENDERBUFFER, fbosrbuf[0]);
 
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-      ERROR("Failed to setup fbos.");
+      ERROR("Failed to setup fbo 1.");
       return -1;
     }
 
+  // texture
+  glBindTexture(GL_TEXTURE_2D, fbostex[1]);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ssaaw, ssaah, 0,
+               GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+  // framebuffer
   glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, colat,
+                         GL_TEXTURE_2D, fbostex[1], 0);
+  glDrawBuffers(1, &colat);
+
+  // renderbuffer
+  glBindRenderbuffer(GL_RENDERBUFFER, fbosrbuf[1]);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, ssaaw, ssaah);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                            GL_RENDERBUFFER, fbosrbuf[1]);
 
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-      ERROR("Failed to setup fbos.");
+      ERROR("Failed to setup fbo 2.");
       return -1;
     }
 
@@ -138,8 +150,6 @@ static int generate_fbos(int w, int h)
   glBindBuffer(GL_ARRAY_BUFFER, fbovbo);
   glBufferData(GL_ARRAY_BUFFER, 2 * 12 * sizeof(GLfloat), FBOVBOVERT,
                GL_STATIC_DRAW);
-
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
   return 0;
 }
 
@@ -274,7 +284,7 @@ static int render_text()
       lastsec = sec;
     }
 
-  glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f, 0.8f);
+  glVertexAttrib4f(COLOR_ATTRIB, 0.8f, 0.8f, 0.8f, 1.0f);
   if (render_string(fpsstr, FPSX, FPSY, 0.0f, FPSW, FPSH, 0.0f))
     return -1;
 
@@ -293,13 +303,9 @@ static int render_text()
   return 0;
 }
 
-static void render_direct()
-{
-  render_text();
-}
-
 static void render_passtwo()
 {
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glBindBuffer(GL_ARRAY_BUFFER, fbovbo);
   render_vbo(2, 12, 6);
 }
@@ -312,23 +318,16 @@ static void render_bars()
 
   bars_render();
 
-  glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]);
+  glBindTexture(GL_TEXTURE_2D, fbostex[0]);
   shader_use(PROG_BARSTWO);
   render_passtwo();
 }
 
-static void render_passthree()
+static void render_ssaatwo()
 {
-  glBindTexture(GL_TEXTURE_2D, fbostex[0]);
-
-  glBindFramebuffer(GL_READ_FRAMEBUFFER, fbos[1]);
-  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-  glViewport(0, 0, winw, winh);
-
-  glBlitFramebuffer(0, 0, msaaw, msaah, 0, 0, winw, winh,
-                    GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-  glViewport(0, 0, msaaw, msaah);
+  glBindTexture(GL_TEXTURE_2D, fbostex[1]);
+  shader_use(PROG_PASS);
+  render_passtwo();
 }
 
 int render()
@@ -338,12 +337,19 @@ int render()
   glEnable(     GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  // direct rendering (skip the first framebuffer)
-  glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]);
   glClearColor(BACKGROUND, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]);
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  render_direct();
+  // ssaa
+  glViewport(0, 0, ssaaw, ssaah);
+
+  render_text();
+
+  glViewport(0, 0, winw, winh);
+  render_ssaatwo();
 
 #if 1 // wtf
     GLuint vbo;
@@ -352,18 +358,10 @@ int render()
     glDeleteBuffers(1, &vbo);
 #endif
 
-  // indirect rendering
-  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-  glBindTexture(GL_TEXTURE_2D, fbostex[0]);
-
   render_bars();
 
   glDisable(     GL_BLEND);
   glDisable(GL_DEPTH_TEST);
-
-  // msaa
-  render_passthree();
-
   texture_bind(TEX_NONE);
   // glDisable(GL_CULL_FACE);
   return 0;

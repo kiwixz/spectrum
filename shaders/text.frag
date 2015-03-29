@@ -28,5 +28,4 @@ uniform sampler2D tex;
 void main()
 {
   color = vf_color * texture(tex, vf_texcoord).x;
-  color = texture(tex, vf_texcoord);
 }

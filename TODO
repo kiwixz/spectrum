@@ -1,5 +1,3 @@
-fix text's antialiasing
-
 motion blur depending of velocity
 
 use vbo for bars
