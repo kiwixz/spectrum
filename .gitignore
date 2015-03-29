@@ -1,4 +1,5 @@
 bin/
+.depend
 *~
 
 # audio files for testing

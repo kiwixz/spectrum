@@ -40,54 +40,122 @@
 
 static GLuint texs[TEXTURES_LENGTH];
 
-static int read_send_tex(const char *file)
-{
-  unsigned int  w, h, size, mipmaps, len, offset, level;
-  unsigned char header[128];
-  GLchar        *buffer;
-  FILE          *f;
+#if 0
+  static int read_send_tex(const char *file)
+  {
+    unsigned int  w, h, size, mipmaps, len, offset, level;
+    unsigned char header[128];
+    GLchar        *buffer;
+    FILE          *f;
 
-  f = fopen(file, "rb");
-  if (!f)
+    f = fopen(file, "rb");
+    if (!f)
+      {
+        ERROR("Failed to open a texture.");
+        return -1;
+      }
+
+    fread(header, sizeof(unsigned char), 128, f);
+
+    h = UCTOUI(header + 12);
+    w = UCTOUI(header + 16);
+    size = UCTOUI(header + 20);
+    mipmaps = UCTOUI(header + 28);
+
+    len = size * 2;
+    buffer = malloc(len * sizeof(GLchar));
+    if (!buffer)
+      {
+        ERROR("Failed to malloc buffer.");
+        return -1;
+      }
+
+    fread(buffer, sizeof(GLchar), len, f);
+    fclose(f);
+
+    offset = 0;
+    for (level = 0; level < mipmaps && (w || h);
+         ++level)
+      {
+        glCompressedTexImage2D(GL_TEXTURE_2D, level,
+                               GL_COMPRESSED_RGBA_S3TC_DXT5_EXT,
+                               w, h, 0, size, buffer + offset);
+
+        offset += size;
+        w /= 2;
+        h /= 2;
+        size = ((w + 3) / 4) * ((h + 3) / 4) * 16;
+      }
+
+    free(buffer);
+    return 0;
+  }
+
+#endif
+
+static int read_send_tex(const char *file) // read only ppm
+{
+#define GOAFTER(c)                              \
+  for (++offset; buffer[offset] != c; ++offset) \
+    {                                           \
+    }                                           \
+  ++offset;
+
+  int    w, h, len, offset;
+  GLchar *buffer;
+  FILE   *fp;
+
+  fp = fopen(file, "rb");
+  if (!fp)
     {
-      ERROR("Failed to open a texture.");
+      ERROR("Failed to open a texture: %s.", file);
       return -1;
     }
 
-  fread(header, sizeof(unsigned char), 128, f);
+  fseek(fp, 0, SEEK_END);
+  len = ftell(fp);
+  rewind(fp);
 
-  h = UCTOUI(header + 12);
-  w = UCTOUI(header + 16);
-  size = UCTOUI(header + 20);
-  mipmaps = UCTOUI(header + 28);
-
-  len = size * 2;
   buffer = malloc(len * sizeof(GLchar));
   if (!buffer)
     {
-      ERROR("Failed to malloc buffer.");
+      ERROR("Failed to malloc buffer for a texture: %s.", file);
       return -1;
     }
 
-  fread(buffer, sizeof(GLchar), len, f);
-  fclose(f);
+  fread(buffer, sizeof(GLchar), len, fp);
+  fclose(fp);
 
-  offset = 0;
-  for (level = 0; level < mipmaps && (w || h);
-       ++level)
+  // read header
+  if ((buffer[0] != 'P') || (buffer[1] != '6'))
     {
-      glCompressedTexImage2D(GL_TEXTURE_2D, level,
-                             GL_COMPRESSED_RGBA_S3TC_DXT5_EXT,
-                             w, h, 0, size, buffer + offset);
-
-      offset += size;
-      w /= 2;
-      h /= 2;
-      size = ((w + 3) / 4) * ((h + 3) / 4) * 16;
+      ERROR("Failed to load a non-PPM file: %s.", file);
+      return -1;
     }
+
+  offset = 3;
+  if (buffer[3] == '#') // skip comment
+    GOAFTER('\n');
+
+  w = atoi(buffer + offset);
+  GOAFTER(' ');
+  h = atoi(buffer + offset);
+  GOAFTER('\n');
+
+  if (atoi(buffer + offset) != 255)
+    {
+      ERROR("Failed to load a PPM without a max color of 255: %s.", file);
+      return -1;
+    }
+
+  GOAFTER('\n');
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, w, h, 0, GL_RGB,
+               GL_UNSIGNED_BYTE, buffer + offset);
 
   free(buffer);
   return 0;
+#undef GOAFTER
 }
 
 static int create_texture(int index, const char *file)
@@ -101,10 +169,7 @@ static int create_texture(int index, const char *file)
                   GL_NEAREST_MIPMAP_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   if (read_send_tex(file))
-    {
-      printf("send tex err\n");
-      return -1;
-    }
+    return -1;
 
   glBindTexture(GL_TEXTURE_2D, 0);
   texs[index] = tex;
@@ -113,7 +178,7 @@ static int create_texture(int index, const char *file)
 
 int texture_init()
 {
-  if (create_texture(TEX_FONT, "textures/font.dds"))
+  if (create_texture(TEX_FONT, "textures/font.ppm"))
     return -1;
 
   return 0;
