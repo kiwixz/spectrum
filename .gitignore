@@ -1,6 +1,6 @@
 bin/
-.depend
 *~
+TODO
 
 # audio files for testing
 *.m4a
