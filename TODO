@@ -1,6 +1,3 @@
-motion blur depending of velocity
-
-use vbo for bars
 index vbos
 fix graphics (when glow disabled)
 
