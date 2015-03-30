@@ -25,15 +25,17 @@
 #include "spectrum.h"
 
 #define VERTICES(a, b, c) \
-  barsvert[index + a] = barsvert[index + b] = barsvert[index + c]
+  vert[index + a] = vert[index + b] = vert[index + c]
 
-static const float barsminh = 0.005f,
-                   barsd = 0.0f,
-                   spacebetween = 0.005f,
-                   spaceside = 0.1f;
+#define SPACESIDE 0.1f
+#define SPACEBETWEEN 0.005f
 
-static float   barsw;
-static GLfloat *barsvert;
+static const float BARSMINH = 0.005f,
+                   BARSD = 0.0f,
+                   BARSW = (1.0f - 2 * SPACESIDE) / SPECBANDS - SPACEBETWEEN;
+
+static GLfloat *vert;
+static GLuint  vbo;
 
 static void make_rectangle(int index,
                            float x, float y, float z,
@@ -55,34 +57,34 @@ static float make_bar(int bar, float x) // return next bar's x
 
   // front
   make_rectangle(index, x, BARSY, 0.0f,
-                 barsw, barsminh, 0.0f);
+                 BARSW, BARSMINH, 0.0f);
   index += 18;
 
   // back
-  make_rectangle(index, x, BARSY, barsd,
-                 barsw, barsminh, 0.0f);
+  make_rectangle(index, x, BARSY, BARSD,
+                 BARSW, BARSMINH, 0.0f);
   index += 18;
 
   // down
   make_rectangle(index, x, BARSY, 0.0f,
-                 barsw, 0.0f, -barsd);
+                 BARSW, 0.0f, -BARSD);
   index += 18;
 
   // up
-  make_rectangle(index, x, BARSY + barsminh, 0.0f,
-                 barsw, 0.0f, -barsd);
+  make_rectangle(index, x, BARSY + BARSMINH, 0.0f,
+                 BARSW, 0.0f, -BARSD);
   index += 18;
 
   // left
   make_rectangle(index, x, BARSY, 0.0f,
-                 0.0f, barsminh, -barsd);
+                 0.0f, BARSMINH, -BARSD);
   index += 18;
 
   // right
-  make_rectangle(index, x + barsw, BARSY, 0.0f,
-                 0.0f, barsminh, -barsd);
+  make_rectangle(index, x + BARSW, BARSY, 0.0f,
+                 0.0f, BARSMINH, -BARSD);
 
-  return barsvert[index + 6] + spacebetween; // because right face is the last
+  return vert[index + 6] + SPACEBETWEEN; // because right face is the last
 }
 
 int bars_new()
@@ -90,28 +92,28 @@ int bars_new()
   int   bar;
   float x;
 
-  if (!barsvert)
+  if (!vert)
     {
-      barsvert = malloc(SPECBANDS * 18 * 6 * sizeof(GLfloat));
-      if (!barsvert)
+      vert = malloc(SPECBANDS * 18 * 6 * sizeof(GLfloat));
+      if (!vert)
         {
-          fprintf(stderr, "Failed to malloc barsvert.");
+          fprintf(stderr, "Failed to malloc vert.");
           return -1;
         }
     }
 
-  barsw = (1.0f - 2 * spaceside) / SPECBANDS - spacebetween;
-
-  x = make_bar(0, spaceside);
+  x = make_bar(0, SPACESIDE);
   for (bar = 1; bar < SPECBANDS; ++bar)
     x = make_bar(bar, x);
 
+  glGenBuffers(1, &vbo);
   return 0;
 }
 
 void bars_delete()
 {
-  free(barsvert);
+  glDeleteBuffers(1, &vbo);
+  free(vert);
 }
 
 static void set_barh(int bar, float h)
@@ -119,8 +121,8 @@ static void set_barh(int bar, float h)
   int index;
 
   index = bar * 6 * 18;
-  if (h < barsminh)
-    h = barsminh;
+  if (h < BARSMINH)
+    h = BARSMINH;
 
   VERTICES(1, 13, 16) // front
     = VERTICES(19, 31, 34) // back
@@ -157,10 +159,14 @@ void bars_render()
   send_color(spectrum);
   spectrum_unlock();
 
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glVertexPointer(3, GL_FLOAT, 0, barsvert);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, SPECBANDS * 18 * 6 * sizeof(GLfloat),
+               vert, GL_STREAM_DRAW);
+
+  glEnableVertexAttribArray(POSITION_ATTRIB);
+  glVertexAttribPointer(POSITION_ATTRIB, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
   glDrawArrays(GL_TRIANGLES, 0, SPECBANDS * 6 * 6);
 
-  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableVertexAttribArray(POSITION_ATTRIB);
 }
