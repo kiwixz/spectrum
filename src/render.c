@@ -351,13 +351,6 @@ int render()
   glViewport(0, 0, winw, winh);
   render_ssaatwo();
 
-#if 1 // wtf
-    GLuint vbo;
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glDeleteBuffers(1, &vbo);
-#endif
-
   render_bars();
 
   glDisable(     GL_BLEND);
