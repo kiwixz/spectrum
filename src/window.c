@@ -23,6 +23,7 @@
 #include <GL/glew.h>
 #include <gdk/gdkkeysyms.h>
 #include "window.h"
+#include "open.h"
 #include "player.h"
 #include "render.h"
 #include "shader.h"
@@ -145,7 +146,6 @@ int window_new(GMainLoop *mainloop, const char *file)
 {
   GtkWidget     *window, *area;
   GtkAccelGroup *accel;
-  GClosure      *closure;
   GdkGLConfig   *conf;
 
   // global variables
@@ -166,8 +166,10 @@ int window_new(GMainLoop *mainloop, const char *file)
 
   // accel
   gtk_window_add_accel_group(GTK_WINDOW(window), accel);
-  closure = g_cclosure_new(player_toggle, 0, 0);
-  gtk_accel_group_connect(accel, GDK_KEY_space, 0, 0, closure);
+  gtk_accel_group_connect(accel, GDK_KEY_space, 0, 0,
+                          g_cclosure_new(player_toggle, 0, 0));
+  gtk_accel_group_connect(accel, GDK_KEY_O, 0, 0,
+                          g_cclosure_new(open_audio, 0, 0));
 
   // area
   gtk_container_add(GTK_CONTAINER(window), area);
@@ -194,7 +196,6 @@ int window_new(GMainLoop *mainloop, const char *file)
   g_signal_connect(area, "configure-event", G_CALLBACK(on_configure), NULL);
   g_signal_connect(area, "expose-event",    G_CALLBACK(on_expose),    NULL);
 
-  gtk_widget_show(window);
   gtk_widget_show_all(window);
 
   if (player_new(loop, file))
