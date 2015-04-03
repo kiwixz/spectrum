@@ -33,7 +33,8 @@ typedef struct
 
 #define DOWNLOADER_MAXLEN 1024
 
-static const char DOWNLOADER[] = "youtube-dl -wi --no-warnings --no-playlist -f bestaudio -o \"/tmp/%%(title)s.m4a\" \"%s\"",
+static const char DOWNLOADER[] =
+  "youtube-dl -wi --no-warnings --no-playlist -f bestaudio -o \"/tmp/%%(title)s.m4a\" \"%s\"",
                   DOWNLOADER_REGEX[] = "([0-9]+)\\.[0-9]+%";
 
 static GtkWidget *window;
@@ -149,7 +150,7 @@ static void open_url_download(GtkWidget *widget, gpointer *data)
 static void open_url()
 {
   UrlWidgets *urlw;
-  GtkWidget  *box, *label, *button;
+  GtkWidget  *table, *label, *labelalign, *button, *buttonalign;
 
   urlw = malloc(sizeof(UrlWidgets));
   if (!urlw)
@@ -160,10 +161,12 @@ static void open_url()
 
   // definitions
   urlw->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  box = gtk_vbox_new(TRUE, 4);
+  table = gtk_table_new(2, 4, FALSE);
   label = gtk_label_new("Enter the URL of the video:");
+  labelalign = gtk_alignment_new(0, 0, 0, 1);
   urlw->textbox = gtk_entry_new();
   button = gtk_button_new_with_label("Download");
+  buttonalign = gtk_alignment_new(1, 0, 0, 1);
   urlw->progressbar = gtk_progress_bar_new();
 
   // window
@@ -171,16 +174,26 @@ static void open_url()
   gtk_window_set_default_size(GTK_WINDOW(urlw->window), 512, 128);
   gtk_container_set_border_width(GTK_CONTAINER(urlw->window), 8);
 
+  // label
+  gtk_container_add(GTK_CONTAINER(labelalign), label);
+
   // button
   g_signal_connect(button, "clicked",
                    G_CALLBACK(open_url_download), urlw);
+  gtk_container_add(GTK_CONTAINER(buttonalign), button);
 
-  gtk_container_add(GTK_CONTAINER(box),          label);
-  gtk_container_add(GTK_CONTAINER(box),          urlw->textbox);
-  gtk_container_add(GTK_CONTAINER(box),          button);
-  gtk_container_add(GTK_CONTAINER(box),          urlw->progressbar);
-  gtk_container_add(GTK_CONTAINER(urlw->window), box);
+  // table
+  gtk_table_set_row_spacings(GTK_TABLE(table), 8);
+  gtk_table_attach(GTK_TABLE(table), labelalign,        0, 1, 0, 1,
+                   GTK_FILL, GTK_FILL, 0, 0);
+  gtk_table_attach(GTK_TABLE(table), urlw->textbox,     0, 2, 1, 2,
+                   GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
+  gtk_table_attach(GTK_TABLE(table), buttonalign,       1, 2, 2, 3,
+                   GTK_FILL, GTK_FILL, 0, 0);
+  gtk_table_attach(GTK_TABLE(table), urlw->progressbar, 0, 2, 3, 4,
+                   GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
 
+  gtk_container_add(GTK_CONTAINER(urlw->window), table);
   gtk_widget_show_all(urlw->window);
 }
 
