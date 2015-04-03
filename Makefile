@@ -15,11 +15,12 @@ $(shell touch -a $(DEPEND))
 NAME=spectrum
 PKGLIBS=glew gtk+-2.0 gtkglext-1.0 gstreamer-1.0
 LIBS=
+MACRO=-D_XOPEN_SOURCE
+OPT=-O3 -ffast-math
 
 CC=c99
-OPT=-O3 -ffast-math
 WARN=-Wall -Wextra -Wformat=2 -Winit-self -Wmissing-include-dirs -Wdeclaration-after-statement -Wshadow -Wno-aggressive-loop-optimizations -Wpacked -Wredundant-decls -Wnested-externs -Winline -Wstack-protector -Wno-missing-field-initializers -Wno-switch -Wno-unused-parameter
-CFLAGS+=$(WARN) $(shell pkg-config --cflags $(PKGLIBS)) $(OPT)
+CFLAGS+=$(MACRO) $(WARN) $(shell pkg-config --cflags $(PKGLIBS)) $(OPT)
 LDFLAGS=-march=native -pipe -m64 -m128bit-long-double -fdiagnostics-color=always $(shell pkg-config --libs $(PKGLIBS)) $(LIBS)
 SRC=$(wildcard src/*.c)
 OBJ=$(addprefix $(DIR)/,$(notdir $(SRC:.c=.o)))
