@@ -34,7 +34,7 @@
 static const int MSGPERSEC = 60;
 
 static char       *name;
-static GstElement *pipeline;
+static GstElement *pipeline, *source;
 static guint      buswatch;
 
 static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
@@ -57,8 +57,10 @@ static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
         }
 
       case GST_MESSAGE_EOS:
-        // End of stream
-        break;
+        {
+          // End of stream
+          break;
+        }
 
       case GST_MESSAGE_ERROR:
         {
@@ -86,16 +88,15 @@ static void on_pad_added(GstElement *element, GstPad *pad, gpointer data)
   gst_object_unref(sinkpad);
 }
 
-int player_new(GMainLoop *loop, const char *file)
+static int set_name(const char *file)
 {
   int        i, len;
   const char *from;
-  GstElement *source, *demuxer, *decoder, *conv, *spec, *sink;
-  GstBus     *bus;
-  GstCaps    *caps;
 
   from = strrchr(file, PATHSEPARATOR);
-  if (!from)
+  if (from)
+    ++from;
+  else
     from = file;
 
   len = strrchr(file, '.') - from;
@@ -106,7 +107,6 @@ int player_new(GMainLoop *loop, const char *file)
       return -1;
     }
 
-  // memcpy(name, from, len);
   for (i = 0; i < len; ++i)
     {
       if ((*from >= 'a') && (*from <= 'z'))
@@ -117,6 +117,18 @@ int player_new(GMainLoop *loop, const char *file)
       ++from;
     }
   name[len] = '\0';
+
+  return 0;
+}
+
+int player_new(GMainLoop *loop, const char *file)
+{
+  GstElement *demuxer, *decoder, *conv, *spec, *sink;
+  GstBus     *bus;
+  GstCaps    *caps;
+
+  if (set_name(file))
+    return -1;
 
   pipeline = gst_pipeline_new("audio-player");
   source = gst_element_factory_make("filesrc", "file-source");
@@ -177,6 +189,19 @@ void player_toggle()
     gst_element_set_state(pipeline, GST_STATE_PAUSED);
   else
     gst_element_set_state(pipeline, GST_STATE_PLAYING);
+}
+
+int player_play_file(const char *file)
+{
+  free(name);
+  if (set_name(file))
+    return -1;
+
+  gst_element_set_state(pipeline, GST_STATE_READY);
+  g_object_set(G_OBJECT(source), "location", file, NULL);
+  gst_element_set_state(pipeline, GST_STATE_PLAYING);
+
+  return 0;
 }
 
 const char *player_get_name()

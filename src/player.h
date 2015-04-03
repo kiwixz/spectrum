@@ -26,6 +26,7 @@ int player_new(GMainLoop *loop, const char *file);
 void player_delete();
 
 void player_toggle();
+int player_play_file(const char *file);
 
 const char *player_get_name();
 void player_get_time(char *time, int maxlen);
