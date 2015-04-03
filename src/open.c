@@ -33,8 +33,7 @@ typedef struct
 
 #define DOWNLOADER_MAXLEN 1024
 
-static const char DOWNLOADER[] =
-  "youtube-dl -wi --no-warnings -f bestaudio -o \"/tmp/%%(title)s.m4a\" \"%s\"",
+static const char DOWNLOADER[] = "youtube-dl -wi --no-warnings --no-playlist -f bestaudio -o \"/tmp/%%(title)s.m4a\" \"%s\"",
                   DOWNLOADER_REGEX[] = "([0-9]+)\\.[0-9]+%";
 
 static GtkWidget *window;
