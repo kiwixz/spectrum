@@ -34,7 +34,6 @@
 #define FONTW 32
 #define FONTH 8
 #define FPSH 0.025f
-#define TITLEY 0.1f
 #define TIMEW 0.2f
 
 static const int   ssaa = 2;
@@ -44,8 +43,11 @@ static const float FONTLW = 1.0f / FONTW,
                    FPSY = 1.0f - FPSH,
                    FPSW = 0.05f,
                    TITLEX = 0.2f,
-                   TITLEW = 0.7f,
-                   TITLEH = BARSY - TITLEY,
+                   TITLETOPY = 0.275f,
+                   TITLEMAXW = 0.7f,
+                   TITLEMAXH = 0.15f,
+                   TITLEMINLWHRATIO = 0.1f,
+                   TITLEMAXLWHRATIO = 1.0f,
                    TIMEX = 0.5f - TIMEW / 2,
                    TIMEY = 0.05f,
                    TIMEH = 0.03f;
@@ -267,8 +269,10 @@ static int render_text()
 {
   static int  lastsec, fps;
   static char fpsstr[16];
-  int         sec;
+  int         sec, len;
+  float       w, h, ratio;
   char        timer[32] = {0};
+  const char  *name;
 
   shader_use(PROG_TEXT);
 
@@ -289,9 +293,27 @@ static int render_text()
     return -1;
 
   // title
+  name = player_get_name();
+  len = strlen(name);
+  ratio = TITLEMAXW / TITLEMAXH / len;
+  if (ratio > TITLEMAXLWHRATIO) // w too large
+    {
+      w = TITLEMAXH * TITLEMAXLWHRATIO * len;
+      h = TITLEMAXH;
+    }
+  else if (ratio < TITLEMINLWHRATIO) // h too large
+    {
+      w = TITLEMAXW;
+      h = TITLEMAXW / TITLEMINLWHRATIO / len;
+    }
+  else
+    {
+      w = TITLEMAXW;
+      h = TITLEMAXH;
+    }
+
   glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f, 1.0f);
-  if (render_string(player_get_name(), TITLEX, TITLEY, 0.0f,
-                    (TITLEW < 1.0f - TITLEX) ? TITLEW : 1.0f, TITLEH, 0.0f))
+  if (render_string(name, TITLEX, TITLETOPY - h, 0.0f, w, h, 0.0f))
     return -1;
 
   // time

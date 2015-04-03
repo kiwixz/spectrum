@@ -30,9 +30,9 @@
 #define SPACESIDE 0.1f
 #define SPACEBETWEEN 0.005f
 
-static const float BARSMINH = 0.005f,
-                   BARSD = 0.0f,
-                   BARSW = (1.0f - 2 * SPACESIDE) / SPECBANDS - SPACEBETWEEN;
+static const float BARSW = (1.0f - 2 * SPACESIDE) / SPECBANDS - SPACEBETWEEN,
+                   BARSMINH = 0.005f,
+                   BARSD = 0.0f;
 
 static GLfloat *vert;
 static GLuint  vbo;
