@@ -30,13 +30,15 @@
 #include "spectrum.h"
 #include "texture.h"
 
-#define BACKGROUND 0.1f, 0.1f, 0.1f
+#define BACKGROUND 0.0f, 0.0f, 0.0f
+
 #define FONTW 32
 #define FONTH 8
 #define FPSH 0.025f
 #define TIMEW 0.2f
 
-static const float FONTLW = 1.0f / FONTW,
+static const float MOTIONBLUR = 0.7f,
+                   FONTLW = 1.0f / FONTW,
                    FONTLH = 1.0f / FONTH,
                    FPSX = 0.001f,
                    FPSY = 1.0f - FPSH,
@@ -165,6 +167,9 @@ int render_setup(GtkWidget *area)
       || generate_fbos(area->allocation.width, area->allocation.height))
     return -1;
 
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
   return 0;
 }
 
@@ -237,7 +242,7 @@ static int render_string(const char *text,
   verttxc = vert + 18 * len;
 
   texture_bind(TEX_FONT);
-  
+
   glGenBuffers(1, &vbo);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
@@ -339,9 +344,8 @@ static void render_bars()
   render_passtwo();
 }
 
-int render()
+static int render_frame_fbo()
 {
-  // glEnable(GL_CULL_FACE);
   glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]);
   glClearColor(BACKGROUND, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -350,22 +354,41 @@ int render()
   // ssaa
   glViewport(0, 0, ssaaw, ssaah);
   glEnable(GL_DEPTH_TEST);
-  glEnable(     GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  render_text();
+  if (render_text())
+    return -1;
+
   render_bars();
 
-  glDisable(     GL_BLEND);
   glDisable(GL_DEPTH_TEST);
   glViewport(0, 0, winw, winh);
+
+  return 0;
+}
+
+static int render_frame(float opacity)
+{
+  if (render_frame_fbo())
+    return -1;
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glBindTexture(GL_TEXTURE_2D, fbostex[1]);
   shader_use(PROG_PASS);
+  glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f, opacity);
   glBindBuffer(GL_ARRAY_BUFFER, fbovbo);
   render_vbo(2, 12, 6);
 
+  return 0;
+}
+
+int render()
+{
+  // glEnable(GL_CULL_FACE);
+
+  if (render_frame(1.0f - MOTIONBLUR))
+    return -1;
+
   // glDisable(GL_CULL_FACE);
+
   return 0;
 }
