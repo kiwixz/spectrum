@@ -101,7 +101,7 @@ static int generate_fbos(int w, int h)
   glBindTexture(GL_TEXTURE_2D, fbostex[0]);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ssaaw, ssaah, 0,
                GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
   // framebuffer
@@ -112,7 +112,7 @@ static int generate_fbos(int w, int h)
 
   // renderbuffer
   glBindRenderbuffer(GL_RENDERBUFFER, fbosrbuf[0]);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, w, h);
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, ssaaw, ssaah);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                             GL_RENDERBUFFER, fbosrbuf[0]);
 
@@ -327,7 +327,8 @@ static int render_text()
 
 static void render_passtwo()
 {
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glBindTexture(GL_TEXTURE_2D, fbostex[0]);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]);
   glBindBuffer(GL_ARRAY_BUFFER, fbovbo);
   render_vbo(2, 12, 6);
 }
@@ -340,45 +341,39 @@ static void render_bars()
 
   bars_render();
 
-  glBindTexture(GL_TEXTURE_2D, fbostex[0]);
   shader_use(PROG_BARSTWO);
-  render_passtwo();
-}
-
-static void render_ssaatwo()
-{
-  glBindTexture(GL_TEXTURE_2D, fbostex[1]);
-  shader_use(PROG_PASS);
   render_passtwo();
 }
 
 int render()
 {
   // glEnable(GL_CULL_FACE);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]);
+  glClearColor(BACKGROUND, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+  // ssaa
+  glViewport(0, 0, ssaaw, ssaah);
   glEnable(GL_DEPTH_TEST);
   glEnable(     GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  glClearColor(BACKGROUND, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]);
-  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  // ssaa
-  glViewport(0, 0, ssaaw, ssaah);
-
   render_text();
-
-  glViewport(0, 0, winw, winh);
-  render_ssaatwo();
-
   render_bars();
 
   glDisable(     GL_BLEND);
   glDisable(GL_DEPTH_TEST);
-  texture_bind(TEX_NONE);
+  glViewport(0, 0, winw, winh);
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glBindTexture(GL_TEXTURE_2D, fbostex[1]);
+  shader_use(PROG_PASS);
+  glBindBuffer(GL_ARRAY_BUFFER, fbovbo);
+  render_vbo(2, 12, 6);
+
   // glDisable(GL_CULL_FACE);
+  texture_bind(TEX_NONE);
   return 0;
 }
 

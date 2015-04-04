@@ -19,8 +19,9 @@
 
 #version 450
 
-const uniform float blur[8] = {
-  0.1517f, 0.0379f, 0.0303f, 0.0228f, 0.0152f, 0.0076f, 0.0038f, 0.0008f
+const uniform float blur[16] = {
+  0.2135f, 0.0480f, 0.0418f, 0.0361f, 0.0307f, 0.0258f, 0.0213f, 0.0173f,
+  0.0137f, 0.0105f, 0.0077f, 0.0053f, 0.0034f, 0.0019f, 0.0009f, 0.0002f
 };
 
 const int blurmid = blur.length() / 2;
