@@ -27,6 +27,8 @@
 #define SMOOTHING 1
 #define SPECBANDS 64
 
-#define ERROR(s, ...) fprintf(stderr, "\x1b[31;1m"s"\x1b[0m\n", ##__VA_ARGS__)
+#define ERROR(s, ...)                                      \
+  fprintf(stderr, __FILE__ ":%d: \x1b[31;1m"s "\x1b[0m\n", \
+          __LINE__, ## __VA_ARGS__)
 
 #endif
