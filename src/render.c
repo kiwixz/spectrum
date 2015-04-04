@@ -36,7 +36,6 @@
 #define FPSH 0.025f
 #define TIMEW 0.2f
 
-static const int   ssaa = 2;
 static const float FONTLW = 1.0f / FONTW,
                    FONTLH = 1.0f / FONTH,
                    FPSX = 0.001f,
@@ -79,73 +78,56 @@ static void delete_fbos()
   glDeleteBuffers(1, &fbovbo);
 }
 
-static int generate_fbos(int w, int h)
+static int generate_fbo(int i)
 {
   GLenum colat;
-
-  if (fbos[0])
-    delete_fbos();
-
-  winw = w;
-  winh = h;
-  ssaaw = ssaa * w;
-  ssaah = ssaa * h;
-
-  glGenFramebuffers(2, fbos);
-  glGenTextures(2, fbostex);
-  glGenRenderbuffers(2, fbosrbuf);
 
   colat = GL_COLOR_ATTACHMENT0;
 
   // texture
-  glBindTexture(GL_TEXTURE_2D, fbostex[0]);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ssaaw, ssaah, 0,
-               GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-  // framebuffer
-  glBindFramebuffer(GL_FRAMEBUFFER, fbos[0]);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, colat,
-                         GL_TEXTURE_2D, fbostex[0], 0);
-  glDrawBuffers(1, &colat);
-
-  // renderbuffer
-  glBindRenderbuffer(GL_RENDERBUFFER, fbosrbuf[0]);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, ssaaw, ssaah);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                            GL_RENDERBUFFER, fbosrbuf[0]);
-
-  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-      ERROR("Failed to setup fbo 1.");
-      return -1;
-    }
-
-  // texture
-  glBindTexture(GL_TEXTURE_2D, fbostex[1]);
+  glBindTexture(GL_TEXTURE_2D, fbostex[i]);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ssaaw, ssaah, 0,
                GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
   // framebuffer
-  glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbos[i]);
   glFramebufferTexture2D(GL_FRAMEBUFFER, colat,
-                         GL_TEXTURE_2D, fbostex[1], 0);
+                         GL_TEXTURE_2D, fbostex[i], 0);
   glDrawBuffers(1, &colat);
 
   // renderbuffer
-  glBindRenderbuffer(GL_RENDERBUFFER, fbosrbuf[1]);
+  glBindRenderbuffer(GL_RENDERBUFFER, fbosrbuf[i]);
   glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, ssaaw, ssaah);
   glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                            GL_RENDERBUFFER, fbosrbuf[1]);
+                            GL_RENDERBUFFER, fbosrbuf[i]);
 
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-      ERROR("Failed to setup fbo 2.");
+      ERROR("Failed to setup fbo n°%d", i);
       return -1;
     }
+
+  return 0;
+}
+
+static int generate_fbos(int w, int h)
+{
+  if (fbos[0])
+    delete_fbos();
+
+  winw = w;
+  winh = h;
+  ssaaw = SSAA * w;
+  ssaah = SSAA * h;
+
+  glGenFramebuffers(2, fbos);
+  glGenTextures(2, fbostex);
+  glGenRenderbuffers(2, fbosrbuf);
+
+  generate_fbo(0);
+  generate_fbo(1);
 
   // vbo
   glGenBuffers(1, &fbovbo);
@@ -220,6 +202,20 @@ static void add_letter(int letter, int index, GLfloat *pos, GLfloat *texcoord,
 
 #undef POS
 #undef TEXCOORD
+}
+
+static void render_vbo(int posdim, int texcoordoffset, int vertcount)
+{
+  glEnableVertexAttribArray(POSITION_ATTRIB);
+  glEnableVertexAttribArray(TEXCOORD_ATTRIB);
+  glVertexAttribPointer(POSITION_ATTRIB, posdim, GL_FLOAT, GL_FALSE, 0, 0);
+  glVertexAttribPointer(TEXCOORD_ATTRIB, 2,      GL_FLOAT, GL_FALSE, 0,
+                        (GLvoid *)(texcoordoffset * sizeof(GLfloat)));
+
+  glDrawArrays(GL_TRIANGLES, 0, vertcount);
+
+  glDisableVertexAttribArray(POSITION_ATTRIB);
+  glDisableVertexAttribArray(TEXCOORD_ATTRIB);
 }
 
 static int render_string(const char *text,
@@ -375,18 +371,4 @@ int render()
   // glDisable(GL_CULL_FACE);
   texture_bind(TEX_NONE);
   return 0;
-}
-
-void render_vbo(int posdim, int texcoordoffset, int vertcount)
-{
-  glEnableVertexAttribArray(POSITION_ATTRIB);
-  glEnableVertexAttribArray(TEXCOORD_ATTRIB);
-  glVertexAttribPointer(POSITION_ATTRIB, posdim, GL_FLOAT, GL_FALSE, 0, 0);
-  glVertexAttribPointer(TEXCOORD_ATTRIB, 2,      GL_FLOAT, GL_FALSE, 0,
-                        (GLvoid *)(texcoordoffset * sizeof(GLfloat)));
-
-  glDrawArrays(GL_TRIANGLES, 0, vertcount);
-
-  glDisableVertexAttribArray(POSITION_ATTRIB);
-  glDisableVertexAttribArray(TEXCOORD_ATTRIB);
 }

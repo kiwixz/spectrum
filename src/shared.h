@@ -20,6 +20,9 @@
 #ifndef SHARED_H
 #define SHARED_H
 
+// even in shaders: use #VAR
+#define SSAA 2
+
 #define AUDIOFREQ 44100
 #define BARSY 0.3f
 #define MAXDB -10

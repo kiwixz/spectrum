@@ -19,17 +19,18 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "shader.h"
 #include "shared.h"
 #include "texture.h"
 
 static GLuint progs[PROGRAMS_LENGTH];
 
-static const char *read_file(const char *file)
+static char *read_file(const char *file)
 {
   FILE *f;
   long len;
-  char *buf;
+  char *buffer;
 
   f = fopen(file, "rb");
   if (!f)
@@ -40,15 +41,30 @@ static const char *read_file(const char *file)
 
   fseek(f, 0, SEEK_END);
   len = ftell(f);
-  buf = (char *)malloc(len + 1);
+  buffer = (char *)malloc(len + 1);
   fseek(f, 0, SEEK_SET);
 
-  fread(buf, len, 1, f);
+  fread(buffer, len, 1, f);
   fclose(f);
 
-  buf[len] = '\0';
+  buffer[len] = '\0';
 
-  return buf;
+  return buffer;
+}
+
+static char *read_shader(const char *file)
+{
+  char *buffer, *pos;
+
+  buffer = read_file(file);
+  if (!buffer)
+    return NULL;
+
+  pos = strstr(buffer, "#SSAA");
+  if (pos)
+    pos[sprintf(pos, "%4d", SSAA)] = ' ';
+
+  return buffer;
 }
 
 static GLuint compile_shader(const char *file, GLuint shader)
@@ -56,7 +72,7 @@ static GLuint compile_shader(const char *file, GLuint shader)
   GLint        done;
   const GLchar *source;
 
-  source = read_file(file);
+  source = read_shader(file);
   if (!source)
     return 0;
 

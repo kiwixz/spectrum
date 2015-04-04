@@ -19,10 +19,10 @@
 
 #version 450
 
-const uniform float blur[16] = {
-  0.0952744, 0.0214367, 0.0186738, 0.0161014, 0.0137195, 0.0115282, 0.0095274,
-  0.0077172, 0.0060976, 0.0046684, 0.0034299, 0.0023819, 0.0015244, 0.0008575,
-  0.0003811, 0.0000953
+const uniform int   ssaa = #SSAA;
+const uniform float blur[8] = {
+  0.0681818f, 0.0261009f, 0.0191761f, 0.0133168f,
+  0.0085227f, 0.0047940f, 0.0021307f, 0.0005327f
 };
 
 const int blurmid = blur.length() / 2;
@@ -35,21 +35,24 @@ uniform sampler2D tex;
 void main()
 {
   ivec2 texcoord;
-  int   x, y, dist, disty;
+  int   i, x, y, dist, disty;
 
   texcoord = ivec2(textureSize(tex, 0) * vf_texcoord);
-
   color = vec4(0.0f);
-  for (y = blur.length() - 1; y >= 0; --y)
-    {
-      disty = abs(y - blurmid);
-      for (x = 0; x < blur.length(); ++x)
-        {
-          dist = max(abs(x - blurmid), disty);
 
-          color +=
-            texelFetch(tex, texcoord + ivec2(x + blurmid, y + blurmid), 0)
-            * blur[dist];
-        }
-    }
+  for (i = 0; i < ssaa; ++i)
+    for (y = 0; y < blur.length(); ++y)
+      {
+        disty = abs(y - blurmid);
+        for (x = 0; x < blur.length(); ++x)
+          {
+            dist = max(abs(x - blurmid), disty);
+
+            color +=
+              texelFetch(tex, texcoord + ivec2(ssaa * x + blurmid - i,
+                                               ssaa * y + blurmid - i), 0)
+              * blur[dist];
+          }
+      }
+
 }
