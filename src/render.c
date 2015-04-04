@@ -167,6 +167,7 @@ int render_setup(GtkWidget *area)
       || generate_fbos(area->allocation.width, area->allocation.height))
     return -1;
 
+  glEnable(GL_CULL_FACE);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -366,7 +367,7 @@ static int render_frame_fbo()
   return 0;
 }
 
-static int render_frame(float opacity)
+int render()
 {
   if (render_frame_fbo())
     return -1;
@@ -374,21 +375,9 @@ static int render_frame(float opacity)
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glBindTexture(GL_TEXTURE_2D, fbostex[1]);
   shader_use(PROG_PASS);
-  glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f, opacity);
+  glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f, 1.0f - MOTIONBLUR);
   glBindBuffer(GL_ARRAY_BUFFER, fbovbo);
   render_vbo(2, 12, 6);
-
-  return 0;
-}
-
-int render()
-{
-  // glEnable(GL_CULL_FACE);
-
-  if (render_frame(1.0f - MOTIONBLUR))
-    return -1;
-
-  // glDisable(GL_CULL_FACE);
 
   return 0;
 }
