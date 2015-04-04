@@ -6,7 +6,7 @@ This is a simple audio spectrum visualizer written in C. It's only tested on Lin
 
 ## What you need
 
-An usual development environnement (a C compiler, GNU Make, etc) is needed. The Makefile use `c99` as an alias for the compiler.
+An usual development environnement (a C compiler, GNU Make, etc) is needed. The Makefile use `c99` as an alias for the compiler. You need youtube-dl to open URLs.
 
 This program also need some libraries:
 - GLEW
@@ -18,8 +18,12 @@ Finally, you need an **m4a** audio file to run it.
 
 ## Compile and Run
 
-There is a Makefile so you would compile and run it with only one command, passing the audio file as argument like that:
+There is a Makefile so you would compile and run it with only one command:
 
 ```
-make run ARGS="foo.m4a"
+make run
 ```
+
+## Features
+
+- Press `O` to open a file or download the audio from a video on youtube-like sites.
