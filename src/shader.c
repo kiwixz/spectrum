@@ -187,7 +187,7 @@ void shader_set_uniforms(GLfloat *matrix)
 
   shader_use(PROG_TEXT);
   shader_send_matrix(PROG_TEXT, matrix);
-  shader_set_texture(PROG_TEXT, 1);
+  shader_set_texture(PROG_TEXT, 0);
 
   shader_use(PROG_BARSONE);
   shader_send_matrix(PROG_BARSONE, matrix);

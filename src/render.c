@@ -236,10 +236,8 @@ static int render_string(const char *text,
     }
   verttxc = vert + 18 * len;
 
-  glActiveTexture(GL_TEXTURE0 + 1);
   texture_bind(TEX_FONT);
-  glActiveTexture(GL_TEXTURE0);
-
+  
   glGenBuffers(1, &vbo);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
@@ -369,6 +367,5 @@ int render()
   render_vbo(2, 12, 6);
 
   // glDisable(GL_CULL_FACE);
-  texture_bind(TEX_NONE);
   return 0;
 }
