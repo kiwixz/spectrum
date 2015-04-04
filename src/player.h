@@ -22,7 +22,7 @@
 
 #include <gst/gst.h>
 
-int player_new(GMainLoop *loop, const char *file);
+int player_new(GMainLoop *loop);
 void player_delete();
 
 void player_toggle();

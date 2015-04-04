@@ -103,7 +103,7 @@ static int set_name(const char *file)
   name = malloc((len + 1) * sizeof(char));
   if (!name)
     {
-      ERROR("Failed to malloc the name.");
+      ERROR("Failed to malloc the %d-long name.", len);
       return -1;
     }
 
@@ -121,14 +121,19 @@ static int set_name(const char *file)
   return 0;
 }
 
-int player_new(GMainLoop *loop, const char *file)
+int player_new(GMainLoop *loop)
 {
   GstElement *demuxer, *decoder, *conv, *spec, *sink;
   GstBus     *bus;
   GstCaps    *caps;
 
-  if (set_name(file))
-    return -1;
+  name = malloc(sizeof(char));
+  if (!name)
+    {
+      ERROR("Failed to malloc the empty name");
+      return -1;
+    }
+  name[0] = '\0';
 
   pipeline = gst_pipeline_new("audio-player");
   source = gst_element_factory_make("filesrc", "file-source");
@@ -147,8 +152,7 @@ int player_new(GMainLoop *loop, const char *file)
       return -1;
     }
 
-  g_object_set(G_OBJECT(source), "location", file, NULL);
-  g_object_set(G_OBJECT(spec),   "bands",    SPECBANDS,
+  g_object_set(G_OBJECT(spec), "bands", SPECBANDS,
                "interval", 1000000000L / MSGPERSEC, "threshold", MINDB, NULL);
 
   bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
@@ -177,7 +181,8 @@ void player_delete()
   gst_object_unref(GST_OBJECT(pipeline));
   g_source_remove(buswatch);
 
-  free(name);
+  if (name)
+    free(name);
 }
 
 void player_toggle()
@@ -187,7 +192,7 @@ void player_toggle()
   gst_element_get_state(pipeline, &state, NULL, GST_CLOCK_TIME_NONE);
   if (state == GST_STATE_PLAYING)
     gst_element_set_state(pipeline, GST_STATE_PAUSED);
-  else
+  else if (name[0])
     gst_element_set_state(pipeline, GST_STATE_PLAYING);
 }
 

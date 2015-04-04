@@ -23,20 +23,12 @@
 #include <gst/gst.h>
 #include "shader.h"
 #include "shared.h"
+#include "player.h"
 #include "window.h"
-
-#define OUT_ITALIC "\x1b[3m"
 
 int main(int argc, char *argv[])
 {
   GMainLoop *loop;
-
-  if (argc < 2)
-    {
-      ERROR("Usage: %s " OUT_ITALIC "file", argv[0]);
-
-      return EXIT_FAILURE;
-    }
 
   gtk_init(&argc, &argv);
   gtk_gl_init(&argc, &argv);
@@ -44,8 +36,13 @@ int main(int argc, char *argv[])
 
   loop = g_main_loop_new(NULL, FALSE);
 
-  if (window_new(loop, argv[1]))
+  if (window_new(loop))
     return EXIT_FAILURE;
+
+  if (argc > 2)
+    ERROR("Too much arguments");
+  else if (argc == 2)
+    player_play_file(argv[1]);
 
   g_main_loop_run(loop);
 

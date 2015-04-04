@@ -142,7 +142,7 @@ static gboolean on_tick(gpointer data)
   return TRUE;
 }
 
-int window_new(GMainLoop *mainloop, const char *file)
+int window_new(GMainLoop *mainloop)
 {
   GtkWidget     *window, *area;
   GtkAccelGroup *accel;
@@ -198,7 +198,7 @@ int window_new(GMainLoop *mainloop, const char *file)
 
   gtk_widget_show_all(window);
 
-  if (player_new(loop, file))
+  if (player_new(loop))
     return -1;
 
   // g_timeout_add(1000.0f / 10, on_tick, area);

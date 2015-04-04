@@ -25,6 +25,6 @@
 #include <gdk/gdkgl.h>
 #include <gst/gst.h>
 
-int  window_new(GMainLoop *loop, const char *file);
+int  window_new(GMainLoop *loop);
 
 #endif
