@@ -61,7 +61,7 @@ static gboolean on_expose(GtkWidget *area, GdkEventExpose *event,
   gldrawable = gtk_widget_get_gl_drawable(area);
   if (!gdk_gl_drawable_gl_begin(gldrawable, glcontext))
     {
-      ERROR("Failed to initialize rendering.");
+      ERROR("Failed to initialize rendering");
       return FALSE;
     }
 
@@ -90,7 +90,7 @@ static gboolean on_configure(GtkWidget *area, GdkEventConfigure *event,
   gldrawable = gtk_widget_get_gl_drawable(area);
   if (!gdk_gl_drawable_gl_begin(gldrawable, glcontext))
     {
-      ERROR("Failed to initialize rendering.");
+      ERROR("Failed to initialize rendering");
       return FALSE;
     }
 
@@ -99,7 +99,7 @@ static gboolean on_configure(GtkWidget *area, GdkEventConfigure *event,
     {
       if (glewInit() != GLEW_OK)
         {
-          ERROR("Failed to initialize graphics.");
+          ERROR("Failed to initialize graphics");
           return FALSE;
         }
 
@@ -177,20 +177,20 @@ int window_new(GMainLoop *mainloop)
   conf = gdk_gl_config_new_by_mode(GDK_GL_MODE_RGB | GDK_GL_MODE_DOUBLE);
   if (!conf)
     {
-      ERROR("Could not find any double-buffered capable visual.");
+      ERROR("Could not find any double-buffered capable visual");
 
       // try single-buffered
       conf = gdk_gl_config_new_by_mode(GDK_GL_MODE_RGB);
       if (!conf)
         {
-          ERROR("Could not find any capable visual.");
+          ERROR("Could not find any capable visual");
           return -1;
         }
     }
   if (!gtk_widget_set_gl_capability(area, conf, NULL, TRUE,
                                     GDK_GL_RGBA_TYPE))
     {
-      ERROR("Failed to setup OpenGL capabilities.");
+      ERROR("Failed to setup OpenGL capabilities");
       return -1;
     }
   g_signal_connect(area, "configure-event", G_CALLBACK(on_configure), NULL);
