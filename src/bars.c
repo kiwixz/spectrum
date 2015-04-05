@@ -133,22 +133,10 @@ static void set_barh(int bar, float h)
                         = BARSY + h;
 }
 
-static void send_color(const Spectrum *spectrum)
-{
-  int   bar;
-  float aver;
-
-  aver = 0.0f;
-  for (bar = 0; bar < SPECBANDS; ++bar)
-    aver += spectrum[bar].mag;
-
-  aver /= SPECBANDS;
-  glVertexAttrib4f(COLOR_ATTRIB, aver, 1.0f, 2 * aver, 1.0f);
-}
-
 void bars_render()
 {
   int            bar;
+  float average;
   const Spectrum *spectrum;
 
   spectrum = spectrum_get_and_lock();
@@ -156,8 +144,10 @@ void bars_render()
   for (bar = 0; bar < SPECBANDS; ++bar)
     set_barh(bar, spectrum[bar].mag);
 
-  send_color(spectrum);
   spectrum_unlock();
+
+  average = spectrum_get_average();
+  glVertexAttrib4f(COLOR_ATTRIB, average, 1.0f, 2 * average, 1.0f);
 
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER, SPECBANDS * 18 * 6 * sizeof(GLfloat),

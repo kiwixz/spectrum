@@ -22,11 +22,12 @@
 #include "spectrum.h"
 #include "shared.h"
 
-static const float stepup = 0.1f,
-                   stepdown = 0.05f;
+static const float STEPUP = 0.1f,
+                   STEPDOWN = 0.05f;
 
-static const float dbratio = (1.0f - BARSY) / (MAXDB - MINDB);
+static const float DBRATIO = (1.0f - BARSY) / (MAXDB - MINDB);
 
+static float    average;
 static Spectrum *spectrum;
 static GMutex   specmutex;
 
@@ -36,7 +37,7 @@ int spectrum_new()
 
   if (!spectrum)
     {
-      fprintf(stderr, "Failed to malloc spectrum.");
+      ERROR("Failed to malloc spectrum");
       return -1;
     }
 
@@ -54,7 +55,7 @@ static void band_set(int band, float new)
     {
       float kstep;
 
-      kstep = stepdown * (new + spectrum[band].mag) / 2;
+      kstep = STEPDOWN * (new + spectrum[band].mag) / 2;
 
       if (spectrum[band].mag - new <= kstep)
         spectrum[band].mag = new;
@@ -65,7 +66,7 @@ static void band_set(int band, float new)
     {
       float kstep;
 
-      kstep = stepup * (new + spectrum[band].mag) / 2;
+      kstep = STEPUP * (new + spectrum[band].mag) / 2;
 
       if (new - spectrum[band].mag <= kstep)
         spectrum[band].mag = new;
@@ -87,9 +88,7 @@ void spectrum_parse(const GstStructure *s)
       const GValue *mag;
 
       mag = gst_value_list_get_value(magnitudes, band);
-
-      if (mag)
-        band_set(band, (g_value_get_float(mag) - MINDB) * dbratio);
+      band_set(band, (g_value_get_float(mag) - MINDB) * DBRATIO);
     }
 
   for (band = SPECBANDS - 2; band > 0; --band)
@@ -97,7 +96,17 @@ void spectrum_parse(const GstStructure *s)
       (spectrum[band - 1].mag * SMOOTHING + spectrum[band].mag * 2
        + spectrum[band + 1].mag * SMOOTHING) / (2 + 2 * SMOOTHING);
 
+  average = 0.0f;
+  for (band = 0; band < SPECBANDS; ++band)
+    average += spectrum[band].mag;
+
+  average /= SPECBANDS;
   g_mutex_unlock(&specmutex);
+}
+
+float spectrum_get_average()
+{
+  return average;
 }
 
 const Spectrum *spectrum_get_and_lock()

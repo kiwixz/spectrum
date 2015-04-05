@@ -17,15 +17,14 @@
  * along with spectrum. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RENDER_H
-#define RENDER_H
+#ifndef PARTICLES_H
+#define PARTICLES_H
 
-#include <gtk/gtk.h>
+#include <GL/glew.h>
 
-int render_setup(GtkWidget *area);
-void render_delete();
+int particles_new();
+void particles_delete();
 
-int render();
-void render_vbo(int posdim, int texcoordoffset, int vertcount);
+void particles_render();
 
 #endif

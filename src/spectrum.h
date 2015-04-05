@@ -31,6 +31,7 @@ void spectrum_delete();
 
 void spectrum_parse(const GstStructure *s);
 
+float spectrum_get_average();
 const Spectrum *spectrum_get_and_lock();
 void spectrum_unlock();
 

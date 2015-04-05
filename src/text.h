@@ -17,15 +17,12 @@
  * along with spectrum. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RENDER_H
-#define RENDER_H
+#ifndef TEXT_H
+#define TEXT_H
 
-#include <gtk/gtk.h>
+int text_new();
+void text_delete();
 
-int render_setup(GtkWidget *area);
-void render_delete();
-
-int render();
-void render_vbo(int posdim, int texcoordoffset, int vertcount);
+int text_render();
 
 #endif

@@ -93,7 +93,7 @@ static GLuint compile_shader(const char *file, GLuint shader)
         }
 
       glGetShaderInfoLog(shader, done, &done, log);
-      ERROR("Failed to link program.\n%s", log);
+      ERROR("Failed to compile shader %s:\n%s", file, log);
 
       free(log);
       return 0;
@@ -138,7 +138,7 @@ static int create_program(int index, const char *vertf, const char *fragf)
         }
 
       glGetProgramInfoLog(prog, done, &done, log);
-      ERROR("Failed to link program.\n%s", log);
+      ERROR("Failed to link program (%s + %s):\n%s", vertf, fragf, log);
 
       free(log);
       return -1;
@@ -151,6 +151,8 @@ static int create_program(int index, const char *vertf, const char *fragf)
 int shader_init()
 {
   if (create_program(PROG_DIRECT, "shaders/direct.vert", "shaders/direct.frag")
+      || (create_program(PROG_PARTICLES,
+                         "shaders/particles.vert", "shaders/particles.frag"))
       || (create_program(PROG_DIRECTTEX,
                          "shaders/directtex.vert", "shaders/directtex.frag"))
       || (create_program(PROG_BARSONE,
@@ -180,6 +182,9 @@ void shader_set_uniforms(GLfloat *matrix)
 {
   shader_use(PROG_DIRECT);
   shader_send_matrix(PROG_DIRECT, matrix);
+
+  shader_use(PROG_PARTICLES);
+  shader_send_matrix(PROG_PARTICLES, matrix);
 
   shader_use(PROG_DIRECTTEX);
   shader_send_matrix(PROG_DIRECTTEX, matrix);

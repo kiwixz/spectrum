@@ -17,15 +17,16 @@
  * along with spectrum. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RENDER_H
-#define RENDER_H
+#version 450
 
-#include <gtk/gtk.h>
+in vec4   position;
+in float  color;
+out float vf_color;
 
-int render_setup(GtkWidget *area);
-void render_delete();
+uniform mat4 matrix;
 
-int render();
-void render_vbo(int posdim, int texcoordoffset, int vertcount);
-
-#endif
+void main()
+{
+  vf_color = color;
+  gl_Position = matrix * position;
+}
