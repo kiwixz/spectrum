@@ -216,24 +216,24 @@ const char *player_get_name()
 
 void player_get_time(char *time, int maxlen)
 {
-  int    posmin, possec, maxmin, maxsec;
-  gint64 pos, max;
+  int    pos, posmin, possec, max, maxmin, maxsec;
+  gint64 gpos, gmax;
 
-  if (!gst_element_query_position(pipeline, GST_FORMAT_TIME, &pos)
-      || !gst_element_query_duration(pipeline, GST_FORMAT_TIME, &max))
+  if (!gst_element_query_position(pipeline, GST_FORMAT_TIME, &gpos)
+      || !gst_element_query_duration(pipeline, GST_FORMAT_TIME, &gmax))
     return;
 
-  posmin = pos / 60000000000L;
-  pos -= posmin * 60000000000L;
-  possec = pos / 1000000000 - posmin;
-  pos -= possec * 1000000000L;
+  pos = gpos / 100000000;
+  posmin = pos / 600;
+  pos -= posmin * 600;
+  possec = pos / 10;
 
-  maxmin = max / 60000000000L;
-  max -= maxmin * 60000000000L;
-  maxsec = max / 1000000000 - maxmin;
-  max -= maxsec * 1000000000L;
+  max = gmax / 100000000;
+  maxmin = max / 600;
+  max -= maxmin * 600;
+  maxsec = max / 10;
 
-  snprintf(time, maxlen, "%d:%d.%d / %d:%d.%d",
-           posmin, possec, (int)(pos / 10000000),
-           maxmin, maxsec, (int)(max / 10000000));
+  snprintf(time, maxlen, "%02d:%02d.%d / %02d:%02d.%d",
+           posmin, possec, pos - possec * 10,
+           maxmin, maxsec, max - maxsec * 10);
 }
