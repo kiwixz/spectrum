@@ -135,39 +135,41 @@ int player_new(GMainLoop *loop)
     }
   name[0] = '\0';
 
+  // definitions
   pipeline = gst_pipeline_new("audio-player");
-  source = gst_element_factory_make("filesrc", "file-source");
-  demuxer = gst_element_factory_make("qtdemux", "demuxer");
-  decoder = gst_element_factory_make("faad", "decoder");
-  conv = gst_element_factory_make("audioconvert", "converter");
-  spec = gst_element_factory_make("spectrum", "spectrum");
+  source = gst_element_factory_make("filesrc", NULL);
+  demuxer = gst_element_factory_make("qtdemux", NULL);
+  decoder = gst_element_factory_make("faad", NULL);
+  conv = gst_element_factory_make("audioconvert", NULL);
+  spec = gst_element_factory_make("spectrum", NULL);
   caps = gst_caps_new_simple("audio/x-raw", "rate",
                              G_TYPE_INT, AUDIOFREQ, NULL);
-  sink = gst_element_factory_make("autoaudiosink", "audio-output");
+  sink = gst_element_factory_make("autoaudiosink", NULL);
 
   if (!pipeline || !source || !demuxer || !decoder
       || !conv || !spec || !caps || !sink)
     {
-      ERROR("Failed to create audio pipeline.");
+      ERROR("Failed to create the audio pipeline");
       return -1;
     }
 
+  // properties
   g_object_set(G_OBJECT(spec), "bands", SPECBANDS,
-               "interval", 1000000000L / MSGPERSEC, "threshold", MINDB, NULL);
+               "interval", 1000000000 / MSGPERSEC, "threshold", MINDB, NULL);
 
   bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
   buswatch = gst_bus_add_watch(bus, on_message, loop);
   gst_object_unref(bus);
 
-  gst_bin_add_many(GST_BIN(pipeline),
-                   source, demuxer, decoder, conv, spec, sink, NULL);
+  gst_bin_add_many(GST_BIN(pipeline), source, demuxer, decoder,
+                   conv, spec, sink, NULL);
 
   if (!gst_element_link(source, demuxer)
       || !gst_element_link(decoder, conv)
       || !gst_element_link_filtered(conv, spec, caps)
       || !gst_element_link(spec, sink))
     {
-      ERROR("Failed to link audio pipeline.");
+      ERROR("Failed to link the audio pipeline");
       return -1;
     }
   g_signal_connect(demuxer, "pad-added", G_CALLBACK(on_pad_added), decoder);
