@@ -40,7 +40,17 @@ static const int W = 1280,
 static int       lastresize;
 static GMainLoop *loop;
 
-static void on_destroy()
+static gboolean on_click(GtkWidget *area, GdkEventButton *event, gpointer data)
+{
+  if (event->type != GDK_BUTTON_PRESS)
+    return FALSE;
+
+  printf("click %f %f\n", event->x, event->y);
+
+  return TRUE;
+}
+
+static void on_destroy(GtkWidget *win, gpointer data)
 {
   player_delete();
   render_delete();
@@ -51,8 +61,7 @@ static void on_destroy()
   g_main_loop_quit(loop);
 }
 
-static gboolean on_expose(GtkWidget *area, GdkEventExpose *event,
-                          gpointer data)
+static gboolean on_expose(GtkWidget *area, GdkEventExpose *event, gpointer data)
 {
   GdkGLContext  *glcontext;
   GdkGLDrawable *gldrawable;
@@ -78,8 +87,8 @@ static gboolean on_expose(GtkWidget *area, GdkEventExpose *event,
   return TRUE;
 }
 
-static gboolean on_configure(GtkWidget *area, GdkEventConfigure *event,
-                             gpointer data)
+static gboolean on_configure(GtkWidget *area,
+                             GdkEventConfigure *event, gpointer data)
 {
   static int done;
 
@@ -160,7 +169,7 @@ int window_new(GMainLoop *mainloop)
   area = gtk_drawing_area_new();
 
   // window
-  gtk_window_set_title(GTK_WINDOW(window), "spectrum");
+  gtk_window_set_title(GTK_WINDOW(window), "Spectrum");
   gtk_window_set_default_size(GTK_WINDOW(window), W, H);
   g_signal_connect(window, "destroy", G_CALLBACK(on_destroy), NULL);
 
@@ -193,8 +202,10 @@ int window_new(GMainLoop *mainloop)
       ERROR("Failed to setup OpenGL capabilities");
       return -1;
     }
-  g_signal_connect(area, "configure-event", G_CALLBACK(on_configure), NULL);
-  g_signal_connect(area, "expose-event",    G_CALLBACK(on_expose),    NULL);
+  gtk_widget_add_events(area, GDK_BUTTON_PRESS_MASK);
+  g_signal_connect(area, "button-press-event", G_CALLBACK(on_click),     NULL);
+  g_signal_connect(area, "configure-event",    G_CALLBACK(on_configure), NULL);
+  g_signal_connect(area, "expose-event",       G_CALLBACK(on_expose),    NULL);
 
   gtk_widget_show_all(window);
 
