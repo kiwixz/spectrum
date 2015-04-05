@@ -33,7 +33,9 @@ typedef struct
 #define OUTOFSCREEN(i) \
   OUTOFRANGE(vert[i]) || OUTOFRANGE(vert[i + 1]) || OUTOFRANGE(vert[i + 2])
 
-#define NUMBER 500
+#define NUMBER 1024
+
+static const int SIZE = 5;
 
 static GLuint   vbo;
 static Particle parts[NUMBER];
@@ -54,8 +56,8 @@ static void respawn_particle(int index, int vindex)
   parts[index].movx = randrf(0.001, 0.01);
   parts[index].movy = randf(-0.001, -0.01);
 
-  vert[vindex] = randf(0.0f, 1.0f);
-  vert[vindex + 1] = randf(0.9f, 1.0f);
+  vert[vindex] = randf(-0.1f, 1.1f);
+  vert[vindex + 1] = randf(1.0f, 1.1f);
 
   vert[NUMBER * 3 + index] = randf(0.1f, 1.0f);
 }
@@ -65,7 +67,7 @@ int particles_new()
   int i;
 
   glGenBuffers(1, &vbo);
-  glPointSize(5);
+  glPointSize(SIZE);
 
   for (i = 0; i < NUMBER; ++i)
     {
