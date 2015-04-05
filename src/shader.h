@@ -26,7 +26,7 @@
 #define COLOR_ATTRIB 1
 #define TEXCOORD_ATTRIB 2
 
-#define PROGRAMS_LENGTH 8
+#define PROGRAMS_LENGTH 7
 typedef enum
 {
   PROG_NONE = 0,
@@ -34,9 +34,8 @@ typedef enum
   PROG_PARTICLES = 2,
   PROG_DIRECTTEX = 3,
   PROG_TEXT = 4,
-  PROG_BARSONE = 5,
-  PROG_PASS = 6,
-  PROG_BARSTWO = 7
+  PROG_PASS = 5,
+  PROG_BARSTWO = 6
 } Program;
 
 int  shader_init();

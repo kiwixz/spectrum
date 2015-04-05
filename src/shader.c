@@ -35,7 +35,7 @@ static char *read_file(const char *file)
   f = fopen(file, "rb");
   if (!f)
     {
-      ERROR("Failed to read shader %s.", file);
+      ERROR("Failed to read shader %s", file);
       return NULL;
     }
 
@@ -88,7 +88,7 @@ static GLuint compile_shader(const char *file, GLuint shader)
       log = malloc(done);
       if (!log)
         {
-          ERROR("Failed to malloc log.");
+          ERROR("Failed to malloc log");
           return 0;
         }
 
@@ -133,7 +133,7 @@ static int create_program(int index, const char *vertf, const char *fragf)
       log = malloc(done);
       if (!log)
         {
-          ERROR("Failed to malloc log.");
+          ERROR("Failed to malloc log");
           return -1;
         }
 
@@ -155,8 +155,6 @@ int shader_init()
                          "shaders/particles.vert", "shaders/particles.frag"))
       || (create_program(PROG_DIRECTTEX,
                          "shaders/directtex.vert", "shaders/directtex.frag"))
-      || (create_program(PROG_BARSONE,
-                         "shaders/barsone.vert", "shaders/barsone.frag"))
       || (create_program(PROG_TEXT,
                          "shaders/text.vert", "shaders/text.frag"))
       || (create_program(PROG_PASS,
@@ -193,10 +191,6 @@ void shader_set_uniforms(GLfloat *matrix)
   shader_use(PROG_TEXT);
   shader_send_matrix(PROG_TEXT, matrix);
   shader_set_texture(PROG_TEXT, 0);
-
-  shader_use(PROG_BARSONE);
-  shader_send_matrix(PROG_BARSONE, matrix);
-  shader_set_texture(PROG_BARSONE, 0);
 
   shader_use(PROG_PASS);
   shader_set_texture(PROG_PASS, 0);
