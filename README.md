@@ -14,7 +14,7 @@ This program also need some libraries:
 - GtkGLExt
 - GStreamer
 
-Finally, you need an **m4a** audio file to run it.
+Finally, you need an **m4a** audio file or an URL to a video from a youtube-like site.
 
 ## Compile and Run
 
@@ -26,4 +26,4 @@ make run
 
 ## Features
 
-- Press `O` to open a file or download the audio from a video on youtube-like sites.
+- Press `O` to open a file or download the audio from a video from youtube-like sites.
