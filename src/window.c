@@ -54,9 +54,9 @@ static void on_destroy(GtkWidget *win, gpointer data)
 {
   player_delete();
   render_delete();
-  shader_delete();
+  shaders_delete();
   spectrum_delete();
-  texture_delete();
+  textures_delete();
 
   g_main_loop_quit(loop);
 }
@@ -112,7 +112,7 @@ static gboolean on_configure(GtkWidget *area,
           return FALSE;
         }
 
-      if (texture_init() || shader_init())
+      if (textures_init() || shaders_init())
         return FALSE;
 
       done = 1;

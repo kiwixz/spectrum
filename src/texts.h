@@ -17,12 +17,12 @@
  * along with spectrum. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TEXT_H
-#define TEXT_H
+#ifndef TEXTS_H
+#define TEXTS_H
 
-int text_new();
-void text_delete();
+int texts_new();
+void texts_delete();
 
-int text_render();
+int texts_render();
 
 #endif

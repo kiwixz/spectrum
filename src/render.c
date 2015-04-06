@@ -138,10 +138,10 @@ int render_setup(GtkWidget *area)
   glScalef(ratio, 1.0f, 1.0f);
 
   glGetFloatv(GL_MODELVIEW_MATRIX, matrix);
-  shader_set_uniforms(matrix);
+  shaders_set_uniforms(matrix);
   glLoadIdentity();
 
-  if (bars_new() || particles_new() || text_new()
+  if (bars_new() || particles_new() || texts_new()
       || generate_fbos(area->allocation.width, area->allocation.height))
     return -1;
 
@@ -171,11 +171,11 @@ static void render_bars()
 {
   glBindFramebuffer(GL_FRAMEBUFFER, fbos[0]);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  shader_use(PROG_DIRECT);
+  shaders_use(PROG_DIRECT);
 
   bars_render();
 
-  shader_use(PROG_BARSTWO);
+  shaders_use(PROG_BARSTWO);
   render_passtwo();
 }
 
@@ -194,7 +194,7 @@ static int render_frame_fbo()
 
   glDisable(GL_DEPTH_TEST);
 
-  if (text_render())
+  if (texts_render())
     return -1;
 
   render_bars();
@@ -211,7 +211,7 @@ int render()
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glBindTexture(GL_TEXTURE_2D, fbostex[1]);
-  shader_use(PROG_PASS);
+  shaders_use(PROG_PASS);
   glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f, 1.0f - MOTIONBLUR);
   glBindBuffer(GL_ARRAY_BUFFER, fbovbo);
   render_vbo(2, 12, 6);

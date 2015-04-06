@@ -148,7 +148,7 @@ static int create_program(int index, const char *vertf, const char *fragf)
   return 0;
 }
 
-int shader_init()
+int shaders_init()
 {
   if (create_program(PROG_DIRECT, "shaders/direct.vert", "shaders/direct.frag")
       || (create_program(PROG_PARTICLES,
@@ -166,46 +166,46 @@ int shader_init()
   return 0;
 }
 
-void shader_delete()
+void shaders_delete()
 {
-  ERROR("shader_delete isn't implemented yet.");
+  ERROR("shaders_delete isn't implemented yet.");
 }
 
-void shader_use(Program prog)
+void shaders_use(Program prog)
 {
   glUseProgram(progs[prog]);
 }
 
-void shader_set_uniforms(GLfloat *matrix)
+void shaders_set_uniforms(GLfloat *matrix)
 {
-  shader_use(PROG_DIRECT);
-  shader_send_matrix(PROG_DIRECT, matrix);
+  shaders_use(PROG_DIRECT);
+  shaders_send_matrix(PROG_DIRECT, matrix);
 
-  shader_use(PROG_PARTICLES);
-  shader_send_matrix(PROG_PARTICLES, matrix);
+  shaders_use(PROG_PARTICLES);
+  shaders_send_matrix(PROG_PARTICLES, matrix);
 
-  shader_use(PROG_DIRECTTEX);
-  shader_send_matrix(PROG_DIRECTTEX, matrix);
-  shader_set_texture(PROG_DIRECTTEX, 0);
+  shaders_use(PROG_DIRECTTEX);
+  shaders_send_matrix(PROG_DIRECTTEX, matrix);
+  shaders_set_texture(PROG_DIRECTTEX, 0);
 
-  shader_use(PROG_TEXT);
-  shader_send_matrix(PROG_TEXT, matrix);
-  shader_set_texture(PROG_TEXT, 0);
+  shaders_use(PROG_TEXT);
+  shaders_send_matrix(PROG_TEXT, matrix);
+  shaders_set_texture(PROG_TEXT, 0);
 
-  shader_use(PROG_PASS);
-  shader_set_texture(PROG_PASS, 0);
+  shaders_use(PROG_PASS);
+  shaders_set_texture(PROG_PASS, 0);
 
-  shader_use(PROG_BARSTWO);
-  shader_set_texture(PROG_BARSTWO, 0);
+  shaders_use(PROG_BARSTWO);
+  shaders_set_texture(PROG_BARSTWO, 0);
 }
 
-void shader_send_matrix(Program prog, GLfloat *matrix)
+void shaders_send_matrix(Program prog, GLfloat *matrix)
 {
   glUniformMatrix4fv(glGetUniformLocation(progs[prog], "matrix"),
                      1, GL_FALSE, matrix);
 }
 
-void shader_set_texture(Program prog, GLuint tex)
+void shaders_set_texture(Program prog, GLuint tex)
 {
   glUniform1i(glGetUniformLocation(progs[prog], "tex"), tex);
 }

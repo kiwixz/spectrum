@@ -50,13 +50,13 @@ static const float FONTLW = 1.0f / FONTW,
 
 static GLuint vbo;
 
-int text_new()
+int texts_new()
 {
   glGenBuffers(1, &vbo);
   return 0;
 }
 
-void text_delete()
+void texts_delete()
 {
   glDeleteBuffers(1, &vbo);
 }
@@ -109,7 +109,7 @@ static int render_string(const char *text,
     }
   verttxc = vert + 18 * len;
 
-  texture_bind(TEX_FONT);
+  textures_bind(TEX_FONT);
 
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
@@ -129,7 +129,7 @@ static int render_string(const char *text,
   return 0;
 }
 
-int text_render()
+int texts_render()
 {
   static int  lastsec, fps;
   static char fpsstr[16];
@@ -138,7 +138,7 @@ int text_render()
   char        timer[32] = {0};
   const char  *name;
 
-  shader_use(PROG_TEXT);
+  shaders_use(PROG_TEXT);
 
   // fps
   sec = time(NULL);

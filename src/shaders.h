@@ -17,8 +17,8 @@
  * along with spectrum. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SHADER_H
-#define SHADER_H
+#ifndef SHADERS_H
+#define SHADERS_H
 
 #include <GL/glew.h>
 
@@ -38,12 +38,12 @@ typedef enum
   PROG_BARSTWO = 6
 } Program;
 
-int  shader_init();
-void shader_delete();
+int  shaders_init();
+void shaders_delete();
 
-void shader_use(Program prog);
-void shader_set_uniforms(GLfloat *matrix);
-void shader_send_matrix(Program prog, GLfloat *matrix);
-void shader_set_texture(Program prog, GLuint tex);
+void shaders_use(Program prog);
+void shaders_set_uniforms(GLfloat *matrix);
+void shaders_send_matrix(Program prog, GLfloat *matrix);
+void shaders_set_texture(Program prog, GLuint tex);
 
 #endif

@@ -17,8 +17,8 @@
  * along with spectrum. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TEXTURE_H
-#define TEXTURE_H
+#ifndef TEXTURES_H
+#define TEXTURES_H
 
 #include <GL/glew.h>
 
@@ -28,10 +28,10 @@ typedef enum {
   TEX_FONT = 1
 } Texture;
 
-int texture_init();
-void texture_delete();
+int textures_init();
+void textures_delete();
 
-void texture_bind(Texture tex);
-GLuint texture_get(Texture tex);
+void textures_bind(Texture tex);
+GLuint textures_get(Texture tex);
 
 #endif

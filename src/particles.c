@@ -90,7 +90,7 @@ void particles_render()
 {
   int i;
 
-  shader_use(PROG_PARTICLES);
+  shaders_use(PROG_PARTICLES);
 
   for (i = 0; i < NUMBER; ++i)
     {

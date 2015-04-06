@@ -109,7 +109,7 @@ static int create_texture(int index, const char *file)
   return 0;
 }
 
-int texture_init()
+int textures_init()
 {
   if (create_texture(TEX_FONT, "textures/font.ppm"))
     return -1;
@@ -117,17 +117,17 @@ int texture_init()
   return 0;
 }
 
-void texture_delete()
+void textures_delete()
 {
-  ERROR("texture_delete isn't implemented yet.");
+  ERROR("textures_delete isn't implemented yet.");
 }
 
-void texture_bind(Texture tex)
+void textures_bind(Texture tex)
 {
   glBindTexture(GL_TEXTURE_2D, texs[tex]);
 }
 
-GLuint texture_get(Texture tex)
+GLuint textures_get(Texture tex)
 {
   return texs[tex];
 }

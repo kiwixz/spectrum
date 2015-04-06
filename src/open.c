@@ -77,7 +77,7 @@ static void open_url_download(GtkWidget *widget, gpointer *data)
   urlw = (UrlWidgets *)data;
   gtk_progress_bar_set_text(GTK_PROGRESS_BAR(urlw->progressbar),
                             "Initializing...");
-  g_main_context_iteration(NULL, TRUE);
+  g_main_contexts_iteration(NULL, TRUE);
 
   if (regcomp(&nregex, "/tmp/.+\\.m4a", REG_EXTENDED)
       || regcomp(&pregex, DOWNLOADER_REGEX, REG_EXTENDED))
@@ -135,7 +135,7 @@ static void open_url_download(GtkWidget *widget, gpointer *data)
       gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(urlw->progressbar),
                                     atoi(buffer + matches[1].rm_so) / 100.0f);
 
-      g_main_context_iteration(NULL, TRUE);
+      g_main_contexts_iteration(NULL, TRUE);
     }
 
   pclose(fp);
