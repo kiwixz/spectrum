@@ -17,21 +17,15 @@
  * along with spectrum. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PLAYER_H
-#define PLAYER_H
+#ifndef BUTTONS_H
+#define BUTTONS_H
 
-#include <gst/gst.h>
+int  buttons_new();
+void buttons_delete();
 
-int player_new(GMainLoop *loop);
-void player_delete();
-
-void player_toggle();
-int player_play_file(const char *file);
-int player_set_position(float frac);
-void player_stop();
-
-const char *player_get_name();
-void player_get_time(char *time, int maxlen);
-float player_get_time_frac();
+void buttons_update();
+void buttons_render();
+void buttons_set_isplaying(int b);
+int buttons_click(int x, int y);
 
 #endif

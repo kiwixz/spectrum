@@ -27,5 +27,7 @@ void render_delete();
 
 int render();
 void render_vbo(int posdim, int texcoordoffset, int vertcount);
+float render_itofx(int n);
+float render_itofy(int n);
 
 #endif

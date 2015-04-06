@@ -41,7 +41,7 @@ static int read_send_tex(const char *file)
   raster = (uint32 *)_TIFFmalloc(w * h * sizeof(uint32));
   if (!raster)
     {
-      ERROR("Failed to malloc the raster of %u bytes for the texture %s",
+      ERROR("Failed to malloc the raster of %lu bytes for the texture %s",
             w * h * sizeof(uint32), file);
       return -1;
     }

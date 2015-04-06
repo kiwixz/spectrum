@@ -29,6 +29,7 @@
 #define MINDB -80
 #define SMOOTHING 1
 #define SPECBANDS 64
+#define TIMEBARH 0.03f
 
 #define ERROR(s, ...)                                      \
   fprintf(stderr, __FILE__ ":%d: \x1b[31;1m"s "\x1b[0m\n", \

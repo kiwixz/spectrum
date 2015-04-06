@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "player.h"
+#include "buttons.h"
 #include "shared.h"
 #include "spectrum.h"
 #include "window.h"
@@ -36,6 +37,11 @@ static const int MSGPERSEC = 60;
 static char       *name;
 static GstElement *pipeline, *source;
 static guint      buswatch;
+
+static void end_of_play()
+{
+  buttons_set_isplaying(0);
+}
 
 static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
 {
@@ -58,7 +64,7 @@ static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
 
       case GST_MESSAGE_EOS:
         {
-          // End of stream
+          end_of_play();
           break;
         }
 
@@ -193,9 +199,15 @@ void player_toggle()
 
   gst_element_get_state(pipeline, &state, NULL, GST_CLOCK_TIME_NONE);
   if (state == GST_STATE_PLAYING)
-    gst_element_set_state(pipeline, GST_STATE_PAUSED);
+    {
+      gst_element_set_state(pipeline, GST_STATE_PAUSED);
+      buttons_set_isplaying(0);
+    }
   else if (name[0])
-    gst_element_set_state(pipeline, GST_STATE_PLAYING);
+    {
+      gst_element_set_state(pipeline, GST_STATE_PLAYING);
+      buttons_set_isplaying(1);
+    }
 }
 
 int player_play_file(const char *file)
@@ -208,7 +220,27 @@ int player_play_file(const char *file)
   g_object_set(G_OBJECT(source), "location", file, NULL);
   gst_element_set_state(pipeline, GST_STATE_PLAYING);
 
+  buttons_set_isplaying(1);
   return 0;
+}
+
+int player_set_position(float frac)
+{
+  gint64 max;
+
+  if (!gst_element_query_duration(pipeline, GST_FORMAT_TIME, &max)
+      || !gst_element_seek_simple(pipeline, GST_FORMAT_TIME,
+                                  GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT,
+                                  frac * max))
+    return -1;
+
+  return 0;
+}
+
+void player_stop()
+{
+  gst_element_set_state(pipeline, GST_STATE_READY);
+  end_of_play();
 }
 
 const char *player_get_name()
@@ -238,4 +270,15 @@ void player_get_time(char *time, int maxlen)
   snprintf(time, maxlen, "%02d:%02d.%d / %02d:%02d.%d",
            posmin, possec, pos - possec * 10,
            maxmin, maxsec, max - maxsec * 10);
+}
+
+float player_get_time_frac()
+{
+  gint64 gpos, gmax;
+
+  if (!gst_element_query_position(pipeline, GST_FORMAT_TIME, &gpos)
+      || !gst_element_query_duration(pipeline, GST_FORMAT_TIME, &gmax))
+    return 0.0f;
+
+  return (double)gpos / gmax;
 }

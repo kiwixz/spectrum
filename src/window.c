@@ -23,6 +23,7 @@
 #include <GL/glew.h>
 #include <gdk/gdkkeysyms.h>
 #include "window.h"
+#include "buttons.h"
 #include "open.h"
 #include "player.h"
 #include "render.h"
@@ -37,7 +38,7 @@ static const int W = 1280,
                  H = 720,
                  RESIZINGMS = 128;
 
-static int       lastresize;
+static int       areaw, areah, lastresize;
 static GMainLoop *loop;
 
 static gboolean on_click(GtkWidget *area, GdkEventButton *event, gpointer data)
@@ -45,9 +46,16 @@ static gboolean on_click(GtkWidget *area, GdkEventButton *event, gpointer data)
   if (event->type != GDK_BUTTON_PRESS)
     return FALSE;
 
-  printf("click %f %f\n", event->x, event->y);
+  if (event->y > areah * (1.0f - TIMEBARH))
+    {
+      player_set_position(event->x / areaw);
+      return TRUE;
+    }
 
-  return TRUE;
+  if (buttons_click(event->x, areah - event->y))
+    return TRUE;
+
+  return FALSE;
 }
 
 static void on_destroy(GtkWidget *win, gpointer data)
@@ -63,12 +71,12 @@ static void on_destroy(GtkWidget *win, gpointer data)
 
 static gboolean on_expose(GtkWidget *area, GdkEventExpose *event, gpointer data)
 {
-  GdkGLContext  *glcontext;
   GdkGLDrawable *gldrawable;
 
-  glcontext = gtk_widget_get_gl_context(area);
+  areaw = area->allocation.width;
+  areah = area->allocation.height;
   gldrawable = gtk_widget_get_gl_drawable(area);
-  if (!gdk_gl_drawable_gl_begin(gldrawable, glcontext))
+  if (!gdk_gl_drawable_gl_begin(gldrawable, gtk_widget_get_gl_context(area)))
     {
       ERROR("Failed to initialize rendering");
       return FALSE;
@@ -92,12 +100,10 @@ static gboolean on_configure(GtkWidget *area,
 {
   static int done;
 
-  GdkGLContext  *glcontext;
   GdkGLDrawable *gldrawable;
 
-  glcontext = gtk_widget_get_gl_context(area);
   gldrawable = gtk_widget_get_gl_drawable(area);
-  if (!gdk_gl_drawable_gl_begin(gldrawable, glcontext))
+  if (!gdk_gl_drawable_gl_begin(gldrawable, gtk_widget_get_gl_context(area)))
     {
       ERROR("Failed to initialize rendering");
       return FALSE;

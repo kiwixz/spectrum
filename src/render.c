@@ -22,14 +22,16 @@
 #include <GL/glew.h>
 #include "render.h"
 #include "bars.h"
+#include "buttons.h"
 #include "particles.h"
 #include "shaders.h"
 #include "shared.h"
 #include "spectrum.h"
 #include "texts.h"
 #include "textures.h"
+#include "timebar.h"
 
-static const float MOTIONBLUR = 0.7f;
+static const float   MOTIONBLUR = 0.7f;
 static const GLfloat FBOVBOVERT[2 * 12] = {
   -1.0f, 1.0f,
   -1.0f, -1.0f,
@@ -46,7 +48,7 @@ static const GLfloat FBOVBOVERT[2 * 12] = {
   0.0f, 1.0f
 };
 
-static int    winw, winh, ssaaw, ssaah;
+static int    areaw, areah, ssaaw, ssaah;
 static GLuint fbovbo;
 static GLuint fbos[2], fbostex[2], fbosrbuf[2];
 
@@ -92,15 +94,10 @@ static int generate_fbo(int i)
   return 0;
 }
 
-static int generate_fbos(int w, int h)
+static int generate_fbos()
 {
   if (fbos[0])
     delete_fbos();
-
-  winw = w;
-  winh = h;
-  ssaaw = SSAA * w;
-  ssaah = SSAA * h;
 
   glGenFramebuffers(2, fbos);
   glGenTextures(2, fbostex);
@@ -112,17 +109,23 @@ static int generate_fbos(int w, int h)
   // vbo
   glGenBuffers(1, &fbovbo);
   glBindBuffer(GL_ARRAY_BUFFER, fbovbo);
-  glBufferData(GL_ARRAY_BUFFER, 2 * 12 * sizeof(GLfloat), FBOVBOVERT,
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, 2 * 12 * sizeof(GLfloat),
+               FBOVBOVERT, GL_STATIC_DRAW);
   return 0;
 }
 
 int render_setup(GtkWidget *area)
 {
+  static int done;
+
   float   ratio;
   GLfloat matrix[16];
 
-  ratio = (float)area->allocation.width / area->allocation.height;
+  areaw = area->allocation.width;
+  areah = area->allocation.height;
+  ratio = (float)areaw / areah;
+  ssaaw = SSAA * areaw;
+  ssaah = SSAA * areah;
 
   // matrix
   glMatrixMode(GL_MODELVIEW);
@@ -141,13 +144,23 @@ int render_setup(GtkWidget *area)
   shaders_set_uniforms(matrix);
   glLoadIdentity();
 
-  if (bars_new() || particles_new() || texts_new()
-      || generate_fbos(area->allocation.width, area->allocation.height))
+  if (!done)
+    {
+      if (bars_new() || buttons_new() || particles_new()
+          || texts_new() || timebar_new())
+        return -1;
+
+      glEnable(GL_CULL_FACE);
+      glEnable(    GL_BLEND);
+      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+      done = 1;
+    }
+
+  if (generate_fbos())
     return -1;
 
-  glEnable(GL_CULL_FACE);
-  glEnable(    GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  buttons_update();
 
   return 0;
 }
@@ -188,18 +201,16 @@ static int render_frame_fbo()
 
   // ssaa
   glViewport(0, 0, ssaaw, ssaah);
-  glEnable(GL_DEPTH_TEST);
 
   particles_render();
-
-  glDisable(GL_DEPTH_TEST);
-
+  timebar_render();
   if (texts_render())
     return -1;
 
   render_bars();
+  buttons_render();
 
-  glViewport(0, 0, winw, winh);
+  glViewport(0, 0, areaw, areah);
 
   return 0;
 }
@@ -231,4 +242,20 @@ void render_vbo(int posdim, int texcoordoffset, int vertcount)
 
   glDisableVertexAttribArray(POSITION_ATTRIB);
   glDisableVertexAttribArray(TEXCOORD_ATTRIB);
+}
+
+float render_itofx(int n)
+{
+  if (n >= 0)
+    return (float)n / areaw;
+  else
+    return 1 + (float)n / areaw;
+}
+
+float render_itofy(int n)
+{
+  if (n >= 0)
+    return (float)n / areah;
+  else
+    return 1 + (float)n / areah;
 }
