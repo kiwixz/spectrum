@@ -22,7 +22,7 @@
 
 #include <GL/glew.h>
 
-int particles_new();
+int  particles_new();
 void particles_delete();
 
 void particles_render();

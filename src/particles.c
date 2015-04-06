@@ -98,7 +98,7 @@ void particles_render()
       float k;
 
       iv = i * 3;
-      k = spectrum_get_average();
+      k = (spectrum_get_averagevel() + spectrum_get_averagemag()) / 2;
 
       vert[iv] += parts[i].movx * k;
       vert[iv + 1] += parts[i].movy * k;

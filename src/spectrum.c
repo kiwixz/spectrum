@@ -27,7 +27,7 @@ static const float STEPUP = 0.1f,
 
 static const float DBRATIO = (1.0f - BARSY) / (MAXDB - MINDB);
 
-static float    average;
+static float    averagemag, averagevel;
 static Spectrum *spectrum;
 static GMutex   specmutex;
 
@@ -49,16 +49,16 @@ void spectrum_delete()
   free(spectrum);
 }
 
-static void band_set(int band, float new)
+static void band_set(int band, float mag)
 {
-  if (new < spectrum[band].mag)
+  if (mag < spectrum[band].mag)
     {
       float kstep;
 
-      kstep = STEPDOWN * (new + spectrum[band].mag) / 2;
+      kstep = STEPDOWN * (mag + spectrum[band].mag) / 2;
 
-      if (spectrum[band].mag - new <= kstep)
-        spectrum[band].mag = new;
+      if (spectrum[band].mag - mag <= kstep)
+        spectrum[band].mag = mag;
       else
         spectrum[band].mag -= kstep;
     }
@@ -66,13 +66,15 @@ static void band_set(int band, float new)
     {
       float kstep;
 
-      kstep = STEPUP * (new + spectrum[band].mag) / 2;
+      kstep = STEPUP * (mag + spectrum[band].mag) / 2;
 
-      if (new - spectrum[band].mag <= kstep)
-        spectrum[band].mag = new;
+      if (mag - spectrum[band].mag <= kstep)
+        spectrum[band].mag = mag;
       else
         spectrum[band].mag += kstep;
     }
+
+  spectrum[band].vel = (mag + spectrum[band].vel) / 2;
 }
 
 void spectrum_parse(const GstStructure *s)
@@ -81,6 +83,7 @@ void spectrum_parse(const GstStructure *s)
   int          band;
 
   magnitudes = gst_structure_get_value(s, "magnitude");
+  averagemag = averagevel = 0.0f;
 
   g_mutex_lock(&specmutex);
   for (band = 0; band < SPECBANDS; ++band)
@@ -89,6 +92,9 @@ void spectrum_parse(const GstStructure *s)
 
       mag = gst_value_list_get_value(magnitudes, band);
       band_set(band, (g_value_get_float(mag) - MINDB) * DBRATIO);
+
+      averagemag += spectrum[band].mag;
+      averagevel += spectrum[band].vel;
     }
 
   for (band = SPECBANDS - 2; band > 0; --band)
@@ -96,17 +102,20 @@ void spectrum_parse(const GstStructure *s)
       (spectrum[band - 1].mag * SMOOTHING + spectrum[band].mag * 2
        + spectrum[band + 1].mag * SMOOTHING) / (2 + 2 * SMOOTHING);
 
-  average = 0.0f;
-  for (band = 0; band < SPECBANDS; ++band)
-    average += spectrum[band].mag;
-
-  average /= SPECBANDS;
   g_mutex_unlock(&specmutex);
+
+  averagemag /= SPECBANDS;
+  averagevel /= SPECBANDS;
 }
 
-float spectrum_get_average()
+float spectrum_get_averagemag()
 {
-  return average;
+  return averagemag;
+}
+
+float spectrum_get_averagevel()
+{
+  return averagevel;
 }
 
 const Spectrum *spectrum_get_and_lock()

@@ -146,7 +146,7 @@ void bars_render()
 
   spectrum_unlock();
 
-  average = spectrum_get_average();
+  average = spectrum_get_averagemag();
   glVertexAttrib4f(COLOR_ATTRIB, average, 1.0f, 2 * average, 1.0f);
 
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
