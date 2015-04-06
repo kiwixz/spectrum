@@ -24,7 +24,7 @@
 #include "shared.h"
 #include "textures.h"
 
-static GLuint progs[PROGRAMS_LENGTH];
+static GLuint progs[PROGLEN];
 
 static char *read_file(const char *file)
 {
