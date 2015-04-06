@@ -20,8 +20,6 @@
 #ifndef PARTICLES_H
 #define PARTICLES_H
 
-#include <GL/glew.h>
-
 int  particles_new();
 void particles_delete();
 
