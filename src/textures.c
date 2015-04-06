@@ -19,73 +19,46 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <tiffio.h>
 #include "textures.h"
 #include "shared.h"
 
+#define TEXPATH(s) "textures/"s ".tif"
+
 static GLuint texs[TEXTURES_LENGTH];
 
-static int read_send_tex(const char *file) // read only ppm
+static int read_send_tex(const char *file)
 {
-#define GOAFTER(c)                              \
-  for (++offset; buffer[offset] != c; ++offset) \
-    {                                           \
-    }                                           \
-  ++offset;
+  TIFF         *tif;
+  uint32 w, h, *raster;
 
-  int    w, h, len, offset;
-  GLchar *buffer;
-  FILE   *fp;
+  tif = TIFFOpen(file, "r");
+  if (!tif)
+    return -1;
 
-  fp = fopen(file, "rb");
-  if (!fp)
+  TIFFGetField(tif, TIFFTAG_IMAGEWIDTH,  &w);
+  TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
+  raster = (uint32 *)_TIFFmalloc(w * h * sizeof(uint32));
+  if (!raster)
     {
-      ERROR("Failed to open a texture: %s.", file);
+      ERROR("Failed to malloc the raster of %u bytes for the texture %s",
+            w * h * sizeof(uint32), file);
       return -1;
     }
 
-  fseek(fp, 0, SEEK_END);
-  len = ftell(fp);
-  rewind(fp);
-
-  buffer = malloc(len * sizeof(GLchar));
-  if (!buffer)
+  if (!TIFFReadRGBAImage(tif, w, h, raster, 0))
     {
-      ERROR("Failed to malloc buffer for a texture: %s.", file);
+      ERROR("Failed to read the texture %s", file);
       return -1;
     }
 
-  fread(buffer, sizeof(GLchar), len, fp);
-  fclose(fp);
+  TIFFClose(tif);
 
-  // read header
-  if ((buffer[0] != 'P') || (buffer[1] != '6'))
-    {
-      ERROR("Failed to load a non-PPM file: %s.", file);
-      return -1;
-    }
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA,
+               GL_UNSIGNED_BYTE, raster);
 
-  offset = 3;
-  if (buffer[3] == '#') // skip comment
-    GOAFTER('\n');
-
-  w = atoi(buffer + offset);
-  GOAFTER(' ');
-  h = atoi(buffer + offset);
-  GOAFTER('\n');
-
-  if (atoi(buffer + offset) != 255)
-    {
-      ERROR("Failed to load a PPM without a max color of 255: %s.", file);
-      return -1;
-    }
-
-  GOAFTER('\n');
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, w, h, 0, GL_RGB,
-               GL_UNSIGNED_BYTE, buffer + offset);
-
-  free(buffer);
+  _TIFFfree(raster);
   return 0;
-#undef GOAFTER
 }
 
 static int create_texture(int index, const char *file)
@@ -111,7 +84,10 @@ static int create_texture(int index, const char *file)
 
 int textures_init()
 {
-  if (create_texture(TEX_FONT, "textures/font.ppm"))
+  if (create_texture(TEX_FONT, TEXPATH("font"))
+      || create_texture(TEX_PLAY, TEXPATH("play"))
+      || create_texture(TEX_PAUSE, TEXPATH("pause"))
+      || create_texture(TEX_STOP, TEXPATH("stop")))
     return -1;
 
   return 0;
@@ -119,7 +95,7 @@ int textures_init()
 
 void textures_delete()
 {
-  ERROR("textures_delete isn't implemented yet.");
+  ERROR("textures_delete isn't implemented yet");
 }
 
 void textures_bind(Texture tex)

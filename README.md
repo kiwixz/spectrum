@@ -13,6 +13,7 @@ This program also need some libraries:
 - GTK+ 2
 - GtkGLExt
 - GStreamer
+- libtiff
 
 Finally, you need an **m4a** audio file or an URL to a video from a youtube-like site.
 

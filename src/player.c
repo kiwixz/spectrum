@@ -155,7 +155,7 @@ int player_new(GMainLoop *loop)
 
   // properties
   g_object_set(G_OBJECT(spec), "bands", SPECBANDS,
-               "interval", 1000000000 / MSGPERSEC, "threshold", MINDB, NULL);
+               "interval", 1000000000L / MSGPERSEC, "threshold", MINDB, NULL);
 
   bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
   buswatch = gst_bus_add_watch(bus, on_message, loop);
@@ -225,12 +225,12 @@ void player_get_time(char *time, int maxlen)
       || !gst_element_query_duration(pipeline, GST_FORMAT_TIME, &gmax))
     return;
 
-  pos = gpos / 100000000;
+  pos = gpos / 100000000L;
   posmin = pos / 600;
   pos -= posmin * 600;
   possec = pos / 10;
 
-  max = gmax / 100000000;
+  max = gmax / 100000000L;
   maxmin = max / 600;
   max -= maxmin * 600;
   maxsec = max / 10;

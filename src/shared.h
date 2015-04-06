@@ -33,5 +33,6 @@
 #define ERROR(s, ...)                                      \
   fprintf(stderr, __FILE__ ":%d: \x1b[31;1m"s "\x1b[0m\n", \
           __LINE__, ## __VA_ARGS__)
+#define GLERROR() ERROR("OpenGL error: %s", gluErrorString(glGetError()))
 
 #endif
