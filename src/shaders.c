@@ -20,9 +20,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "shader.h"
+#include "shaders.h"
 #include "shared.h"
-#include "texture.h"
+#include "textures.h"
 
 static GLuint progs[PROGRAMS_LENGTH];
 

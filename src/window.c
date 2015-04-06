@@ -26,10 +26,10 @@
 #include "open.h"
 #include "player.h"
 #include "render.h"
-#include "shader.h"
+#include "shaders.h"
 #include "shared.h"
 #include "spectrum.h"
-#include "texture.h"
+#include "textures.h"
 
 #define GETMS() 1000 * clock() / CLOCKS_PER_SEC
 

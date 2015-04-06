@@ -19,7 +19,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "texture.h"
+#include "textures.h"
 #include "shared.h"
 
 static GLuint texs[TEXTURES_LENGTH];

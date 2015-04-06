@@ -23,11 +23,11 @@
 #include "render.h"
 #include "bars.h"
 #include "particles.h"
-#include "shader.h"
+#include "shaders.h"
 #include "shared.h"
 #include "spectrum.h"
-#include "text.h"
-#include "texture.h"
+#include "texts.h"
+#include "textures.h"
 
 static const float MOTIONBLUR = 0.7f;
 static const GLfloat FBOVBOVERT[2 * 12] = {

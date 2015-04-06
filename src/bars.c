@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "bars.h"
-#include "shader.h"
+#include "shaders.h"
 #include "shared.h"
 #include "spectrum.h"
 

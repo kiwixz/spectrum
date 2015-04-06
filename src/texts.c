@@ -21,12 +21,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include "text.h"
+#include "texts.h"
 #include "player.h"
 #include "render.h"
-#include "shader.h"
+#include "shaders.h"
 #include "shared.h"
-#include "texture.h"
+#include "textures.h"
 
 #define FONTW 32
 #define FONTH 8

@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <glib.h>
 #include <gst/gst.h>
-#include "shader.h"
+#include "shaders.h"
 #include "shared.h"
 #include "player.h"
 #include "window.h"
