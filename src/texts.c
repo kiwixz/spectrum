@@ -138,7 +138,7 @@ int texts_render()
   char        timer[32] = {0};
   const char  *name;
 
-  shaders_use(PROG_TEXT);
+  shaders_use(PROG_DIRECTTEX);
 
   // fps
   sec = time(NULL);

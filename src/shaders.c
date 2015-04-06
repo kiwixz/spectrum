@@ -155,8 +155,6 @@ int shaders_init()
                          "shaders/particles.vert", "shaders/particles.frag"))
       || (create_program(PROG_DIRECTTEX,
                          "shaders/directtex.vert", "shaders/directtex.frag"))
-      || (create_program(PROG_TEXT,
-                         "shaders/text.vert", "shaders/text.frag"))
       || (create_program(PROG_PASS,
                          "shaders/pass.vert", "shaders/pass.frag"))
       || (create_program(PROG_BARSTWO,
@@ -187,10 +185,6 @@ void shaders_set_uniforms(GLfloat *matrix)
   shaders_use(PROG_DIRECTTEX);
   shaders_send_matrix(PROG_DIRECTTEX, matrix);
   shaders_set_texture(PROG_DIRECTTEX, 0);
-
-  shaders_use(PROG_TEXT);
-  shaders_send_matrix(PROG_TEXT, matrix);
-  shaders_set_texture(PROG_TEXT, 0);
 
   shaders_use(PROG_PASS);
   shaders_set_texture(PROG_PASS, 0);

@@ -26,16 +26,15 @@
 #define COLOR_ATTRIB 1
 #define TEXCOORD_ATTRIB 2
 
-#define PROGLEN 7
+#define PROGLEN 6
 typedef enum
 {
   PROG_NONE = 0,
   PROG_DIRECT = 1,
   PROG_PARTICLES = 2,
   PROG_DIRECTTEX = 3,
-  PROG_TEXT = 4,
-  PROG_PASS = 5,
-  PROG_BARSTWO = 6
+  PROG_PASS = 4,
+  PROG_BARSTWO = 5
 } Program;
 
 int  shaders_init();
