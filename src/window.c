@@ -38,22 +38,39 @@ static const int W = 1280,
                  H = 720,
                  RESIZINGMS = 128;
 
-static int       areaw, areah, lastresize;
+static int       areaw, areah, lastresize, clicking, motionblur;
 static GMainLoop *loop;
 
-static gboolean on_click(GtkWidget *area, GdkEventButton *event, gpointer data)
+static gboolean on_press(GtkWidget *area, GdkEventButton *event, gpointer data)
 {
   if (event->type != GDK_BUTTON_PRESS)
     return FALSE;
 
-  if (event->y > areah * (1.0f - TIMEBARH))
-    {
-      player_set_position(event->x / areaw);
-      return TRUE;
-    }
+  clicking = 1;
 
   if (buttons_click(event->x, areah - event->y))
     return TRUE;
+
+  return FALSE;
+}
+
+static gboolean on_release(GtkWidget *area, GdkEventButton *event,
+                           gpointer data)
+{
+  clicking = 0;
+
+  return FALSE;
+}
+
+static gboolean on_motion(GtkWidget *area, GdkEventButton *event, gpointer data)
+{
+  if (clicking && (event->y > areah * (1.0f - TIMEBARH)))
+    {
+      player_set_position(event->x / areaw);
+      motionblur = 0;
+
+      return TRUE;
+    }
 
   return FALSE;
 }
@@ -82,7 +99,7 @@ static gboolean on_expose(GtkWidget *area, GdkEventExpose *event, gpointer data)
       return FALSE;
     }
 
-  if (render())
+  if (render(motionblur))
     return FALSE;
 
   if (gdk_gl_drawable_is_double_buffered(gldrawable))
@@ -129,6 +146,7 @@ static gboolean on_configure(GtkWidget *area,
 
   gdk_gl_drawable_gl_end(gldrawable);
 
+  motionblur = 0;
   lastresize = GETMS();
 
   return TRUE;
@@ -153,6 +171,9 @@ static gboolean on_tick(gpointer data)
   area = GTK_WIDGET(data);
   gdk_window_invalidate_rect(area->window, &area->allocation, FALSE);
   gdk_window_process_updates(area->window, FALSE);
+
+  if (tick - lastresize >= RESIZINGMS)
+    motionblur = 1;
 
   return TRUE;
 }
@@ -208,10 +229,13 @@ int window_new(GMainLoop *mainloop)
       ERROR("Failed to setup OpenGL capabilities");
       return -1;
     }
-  gtk_widget_add_events(area, GDK_BUTTON_PRESS_MASK);
-  g_signal_connect(area, "button-press-event", G_CALLBACK(on_click),     NULL);
-  g_signal_connect(area, "configure-event",    G_CALLBACK(on_configure), NULL);
-  g_signal_connect(area, "expose-event",       G_CALLBACK(on_expose),    NULL);
+  gtk_widget_add_events(area, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK
+                        | GDK_POINTER_MOTION_MASK);
+  g_signal_connect(area, "button-press-event", G_CALLBACK(on_press), NULL);
+  g_signal_connect(area, "button-release-event", G_CALLBACK(on_release), NULL);
+  g_signal_connect(area, "motion-notify-event", G_CALLBACK(on_motion), NULL);
+  g_signal_connect(area, "configure-event", G_CALLBACK(on_configure), NULL);
+  g_signal_connect(area, "expose-event", G_CALLBACK(on_expose), NULL);
 
   gtk_widget_show_all(window);
 

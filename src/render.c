@@ -215,7 +215,7 @@ static int render_frame_fbo()
   return 0;
 }
 
-int render()
+int render(int motionblur)
 {
   if (render_frame_fbo())
     return -1;
@@ -223,7 +223,8 @@ int render()
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glBindTexture(GL_TEXTURE_2D, fbostex[1]);
   shaders_use(PROG_PASS);
-  glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f, 1.0f - MOTIONBLUR);
+  glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f,
+                   motionblur ? 1.0f - MOTIONBLUR : 1.0f);
   glBindBuffer(GL_ARRAY_BUFFER, fbovbo);
   render_vbo(2, 12, 6);
 
