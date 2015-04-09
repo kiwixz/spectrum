@@ -25,18 +25,18 @@
 
 #define TEXPATH(s) "textures/"s ".tif"
 
-static GLuint texs[TEXTURES_LENGTH];
+static GLuint texs[TEXTURESLEN];
 
 static int read_send_tex(const char *file)
 {
-  TIFF         *tif;
+  TIFF   *tif;
   uint32 w, h, *raster;
 
   tif = TIFFOpen(file, "r");
   if (!tif)
     return -1;
 
-  TIFFGetField(tif, TIFFTAG_IMAGEWIDTH,  &w);
+  TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
   TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
   raster = (uint32 *)_TIFFmalloc(w * h * sizeof(uint32));
   if (!raster)
@@ -63,10 +63,7 @@ static int read_send_tex(const char *file)
 
 static int create_texture(int index, const char *file)
 {
-  GLuint tex;
-
-  glGenTextures(1, &tex);
-  glBindTexture(GL_TEXTURE_2D, tex);
+  glBindTexture(GL_TEXTURE_2D, texs[index]);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
@@ -77,13 +74,14 @@ static int create_texture(int index, const char *file)
 
   glGenerateMipmap(GL_TEXTURE_2D);
   glBindTexture(GL_TEXTURE_2D, 0);
-  texs[index] = tex;
 
   return 0;
 }
 
 int textures_init()
 {
+  glGenTextures(TEXTURESLEN - 1, texs + 1);
+
   if (create_texture(TEX_FONT, TEXPATH("font"))
       || create_texture(TEX_PLAY, TEXPATH("play"))
       || create_texture(TEX_PAUSE, TEXPATH("pause"))

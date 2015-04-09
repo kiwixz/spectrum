@@ -22,7 +22,7 @@
 
 #include <GL/glew.h>
 
-#define TEXTURES_LENGTH 5
+#define TEXTURESLEN 5
 typedef enum
 {
   TEX_NONE = 0,
