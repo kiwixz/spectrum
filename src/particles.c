@@ -33,7 +33,7 @@ typedef struct
 #define OUTOFSCREEN(i) \
   OUTOFRANGE(vert[i]) || OUTOFRANGE(vert[i + 1]) || OUTOFRANGE(vert[i + 2])
 
-#define NUMBER 1024
+#define NUMBER 2048
 
 static const int SIZE = 5;
 
