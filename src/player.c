@@ -34,6 +34,7 @@
 
 static const int MSGPERSEC = 60;
 
+static gint64     position;
 static char       *name;
 static GstElement *pipeline, *source;
 static guint      buswatch;
@@ -41,6 +42,7 @@ static guint      buswatch;
 static void end_of_play()
 {
   buttons_set_isplaying(0);
+  position = 0;
 }
 
 static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
@@ -253,9 +255,16 @@ void player_get_time(char *time, int maxlen)
   int    pos, posmin, possec, max, maxmin, maxsec;
   gint64 gpos, gmax;
 
-  if (!gst_element_query_position(pipeline, GST_FORMAT_TIME, &gpos)
-      || !gst_element_query_duration(pipeline, GST_FORMAT_TIME, &gmax))
-    return;
+  if (!gst_element_query_duration(pipeline, GST_FORMAT_TIME, &gmax))
+    {
+      time[0] = '\0';
+      return;
+    }
+
+  if (gst_element_query_position(pipeline, GST_FORMAT_TIME, &gpos))
+    position = gpos;
+  else
+    gpos = position;
 
   pos = gpos / 100000000L;
   posmin = pos / 600;
@@ -274,11 +283,13 @@ void player_get_time(char *time, int maxlen)
 
 float player_get_time_frac()
 {
-  gint64 gpos, gmax;
+  gint64 pos, max;
 
-  if (!gst_element_query_position(pipeline, GST_FORMAT_TIME, &gpos)
-      || !gst_element_query_duration(pipeline, GST_FORMAT_TIME, &gmax))
+  if (!gst_element_query_duration(pipeline, GST_FORMAT_TIME, &max))
     return 0.0f;
 
-  return (double)gpos / gmax;
+  if (gst_element_query_position(pipeline, GST_FORMAT_TIME, &pos))
+    position = pos;
+
+  return (double)position / max;
 }

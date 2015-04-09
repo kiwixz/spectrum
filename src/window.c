@@ -67,7 +67,6 @@ static gboolean on_motion(GtkWidget *area, GdkEventButton *event, gpointer data)
   if (clicking && (event->y > areah * (1.0f - TIMEBARH)))
     {
       player_set_position(event->x / areaw);
-      motionblur = 0;
 
       return TRUE;
     }
