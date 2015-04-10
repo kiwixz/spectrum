@@ -26,7 +26,6 @@ int render_setup(GtkWidget *area);
 void render_delete();
 
 int render(int motionblur);
-void render_vbo(int posdim, int texcoordoffset, int vertcount);
 float render_itofx(int n);
 float render_itofy(int n);
 

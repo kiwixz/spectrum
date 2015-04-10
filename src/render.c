@@ -31,25 +31,24 @@
 #include "textures.h"
 #include "timebar.h"
 
-static const float   MOTIONBLUR = 0.7f;
-static const GLfloat FBOVBOVERT[2 * 12] = {
+static const float         MOTIONBLUR = 0.66f;
+static const unsigned char FBOVBOID[6] = {
+  0, 1, 2, 2, 3, 0
+};
+static const GLfloat       FBOVBOVERT[2 * 2 * 4] = {
   -1.0f, 1.0f,
   -1.0f, -1.0f,
   1.0f, -1.0f,
-  1.0f, -1.0f,
   1.0f, 1.0f,
-  -1.0f, 1.0f,
   //
   0.0f, 1.0f,
   0.0f, 0.0f,
   1.0f, 0.0f,
-  1.0f, 0.0f,
-  1.0f, 1.0f,
-  0.0f, 1.0f
+  1.0f, 1.0f
 };
 
 static int    areaw, areah, ssaaw, ssaah;
-static GLuint fbovbo;
+static GLuint fbovbo, fbovboi;
 static GLuint fbos[2], fbostex[2], fbosrbuf[2];
 
 static void delete_fbos()
@@ -109,8 +108,13 @@ static int generate_fbos()
   // vbo
   glGenBuffers(1, &fbovbo);
   glBindBuffer(GL_ARRAY_BUFFER, fbovbo);
-  glBufferData(GL_ARRAY_BUFFER, 2 * 12 * sizeof(GLfloat),
+  glBufferData(GL_ARRAY_BUFFER, sizeof(FBOVBOVERT),
                FBOVBOVERT, GL_STATIC_DRAW);
+  glGenBuffers(1, &fbovboi);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fbovboi);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(FBOVBOID),
+               FBOVBOID, GL_STATIC_DRAW);
+
   return 0;
 }
 
@@ -151,7 +155,7 @@ int render_setup(GtkWidget *area)
         return -1;
 
       glEnable(GL_CULL_FACE);
-      glEnable(    GL_BLEND);
+      glEnable(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
       done = 1;
@@ -172,12 +176,29 @@ void render_delete()
   particles_delete();
 }
 
+static void render_static_vbo()
+{
+  glBindBuffer(GL_ARRAY_BUFFER, fbovbo);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, fbovboi);
+
+  glEnableVertexAttribArray(POSITION_ATTRIB);
+  glEnableVertexAttribArray(TEXCOORD_ATTRIB);
+  glVertexAttribPointer(POSITION_ATTRIB, 2, GL_FLOAT, GL_FALSE, 0, 0);
+  glVertexAttribPointer(TEXCOORD_ATTRIB, 2, GL_FLOAT, GL_FALSE, 0,
+                        (GLvoid *)(sizeof(FBOVBOVERT) / 2));
+
+  glDrawElements(GL_TRIANGLES, sizeof(FBOVBOID), GL_UNSIGNED_BYTE, 0);
+
+  glDisableVertexAttribArray(POSITION_ATTRIB);
+  glDisableVertexAttribArray(TEXCOORD_ATTRIB);
+}
+
 static void render_passtwo()
 {
   glBindTexture(GL_TEXTURE_2D, fbostex[0]);
   glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]);
   glBindBuffer(GL_ARRAY_BUFFER, fbovbo);
-  render_vbo(2, 12, 6);
+  render_static_vbo();
 }
 
 static void render_bars()
@@ -225,24 +246,10 @@ int render(int motionblur)
   shaders_use(PROG_PASS);
   glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f,
                    motionblur ? 1.0f - MOTIONBLUR : 1.0f);
-  glBindBuffer(GL_ARRAY_BUFFER, fbovbo);
-  render_vbo(2, 12, 6);
+
+  render_static_vbo();
 
   return 0;
-}
-
-void render_vbo(int posdim, int texcoordoffset, int vertcount)
-{
-  glEnableVertexAttribArray(POSITION_ATTRIB);
-  glEnableVertexAttribArray(TEXCOORD_ATTRIB);
-  glVertexAttribPointer(POSITION_ATTRIB, posdim, GL_FLOAT, GL_FALSE, 0, 0);
-  glVertexAttribPointer(TEXCOORD_ATTRIB, 2,      GL_FLOAT, GL_FALSE, 0,
-                        (GLvoid *)(texcoordoffset * sizeof(GLfloat)));
-
-  glDrawArrays(GL_TRIANGLES, 0, vertcount);
-
-  glDisableVertexAttribArray(POSITION_ATTRIB);
-  glDisableVertexAttribArray(TEXCOORD_ATTRIB);
 }
 
 float render_itofx(int n)
