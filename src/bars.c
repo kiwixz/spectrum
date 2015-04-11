@@ -41,11 +41,11 @@ static void make_rectangle(int index,
                            float x, float y, float z,
                            float w, float h, float d)
 {
-  VERTICES(0,  3, 15) = x;
-  VERTICES(6,  9, 12) = x + w;
-  VERTICES(4,  7, 10) = y;
+  VERTICES(0, 3, 15) = x;
+  VERTICES(6, 9, 12) = x + w;
+  VERTICES(4, 7, 10) = y;
   VERTICES(1, 13, 16) = y + h;
-  VERTICES(2,  5, 17) = z;
+  VERTICES(2, 5, 17) = z;
   VERTICES(8, 11, 14) = z - d;
 }
 
@@ -92,14 +92,11 @@ int bars_new()
   int   bar;
   float x;
 
+  vert = malloc(SPECBANDS * 18 * 6 * sizeof(GLfloat));
   if (!vert)
     {
-      vert = malloc(SPECBANDS * 18 * 6 * sizeof(GLfloat));
-      if (!vert)
-        {
-          fprintf(stderr, "Failed to malloc vert.");
-          return -1;
-        }
+      fprintf(stderr, "Failed to malloc vert.");
+      return -1;
     }
 
   x = make_bar(0, SPACESIDE);
@@ -136,7 +133,7 @@ static void set_barh(int bar, float h)
 void bars_render()
 {
   int            bar;
-  float average;
+  float          average;
   const Spectrum *spectrum;
 
   spectrum = spectrum_get_and_lock();
