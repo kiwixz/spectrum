@@ -108,6 +108,8 @@ static int set_name(const char *file)
     from = file;
 
   len = strrchr(file, '.') - from;
+
+  free(name);
   name = malloc((len + 1) * sizeof(char));
   if (!name)
     {
@@ -214,7 +216,6 @@ void player_toggle()
 
 int player_play_file(const char *file)
 {
-  free(name);
   if (set_name(file))
     return -1;
 

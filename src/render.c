@@ -32,7 +32,7 @@
 #include "timebar.h"
 
 static const float         MOTIONBLUR = 0.66f;
-static const unsigned char FBOVBOID[6] = {
+static const GLubyte FBOVBOID[6] = {
   0, 1, 2, 2, 3, 0
 };
 static const GLfloat       FBOVBOVERT[2 * 2 * 4] = {
@@ -154,7 +154,7 @@ int render_setup(GtkWidget *area)
           || texts_new() || timebar_new())
         return -1;
 
-      glEnable(GL_CULL_FACE);
+      //glEnable(GL_CULL_FACE);
       glEnable(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -187,7 +187,7 @@ static void render_static_vbo()
   glVertexAttribPointer(TEXCOORD_ATTRIB, 2, GL_FLOAT, GL_FALSE, 0,
                         (GLvoid *)(sizeof(FBOVBOVERT) / 2));
 
-  glDrawElements(GL_TRIANGLES, sizeof(FBOVBOID), GL_UNSIGNED_BYTE, 0);
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0);
 
   glDisableVertexAttribArray(POSITION_ATTRIB);
   glDisableVertexAttribArray(TEXCOORD_ATTRIB);
