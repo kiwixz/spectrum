@@ -51,6 +51,12 @@ static gboolean on_press(GtkWidget *area, GdkEventButton *event, gpointer data)
   if (buttons_click(event->x, areah - event->y))
     return TRUE;
 
+  if (event->y > areah * (1.0f - TIMEBARH))
+    {
+      player_set_position(event->x / areaw);
+      return TRUE;
+    }
+
   return FALSE;
 }
 
@@ -67,7 +73,6 @@ static gboolean on_motion(GtkWidget *area, GdkEventButton *event, gpointer data)
   if (clicking && (event->y > areah * (1.0f - TIMEBARH)))
     {
       player_set_position(event->x / areaw);
-
       return TRUE;
     }
 

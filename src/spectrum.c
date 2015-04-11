@@ -22,8 +22,8 @@
 #include "spectrum.h"
 #include "shared.h"
 
-static const float STEPUP = 0.1f,
-                   STEPDOWN = 0.05f;
+static const int KUP = 2,
+                 KDOWN = 8;
 
 static const float DBRATIO = (1.0f - BARSY) / (MAXDB - MINDB);
 
@@ -51,28 +51,10 @@ void spectrum_delete()
 
 static void band_set(int band, float mag)
 {
-  if (mag < spectrum[band].mag)
-    {
-      float kstep;
-
-      kstep = STEPDOWN * (mag + spectrum[band].mag) / 2;
-
-      if (spectrum[band].mag - mag <= kstep)
-        spectrum[band].mag = mag;
-      else
-        spectrum[band].mag -= kstep;
-    }
-  else // the new value is very rarely equal to the old value
-    {
-      float kstep;
-
-      kstep = STEPUP * (mag + spectrum[band].mag) / 2;
-
-      if (mag - spectrum[band].mag <= kstep)
-        spectrum[band].mag = mag;
-      else
-        spectrum[band].mag += kstep;
-    }
+  if (mag > spectrum[band].mag)
+    spectrum[band].mag = (mag + (KUP - 1) * spectrum[band].mag) / KUP;
+  else
+    spectrum[band].mag = (mag + (KDOWN - 1) * spectrum[band].mag) / KDOWN;
 
   spectrum[band].vel = (mag + spectrum[band].vel) / 2;
 }

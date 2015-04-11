@@ -53,8 +53,8 @@ static float randrf(float min, float max)
 
 static void respawn_particle(int index, int vindex)
 {
-  parts[index].movx = randrf(0.001, 0.01);
-  parts[index].movy = randf(-0.001, -0.01);
+  parts[index].movx = randrf(0.002, 0.01);
+  parts[index].movy = randf(-0.002, -0.01);
 
   vert[vindex] = randf(-0.1f, 1.1f);
   vert[vindex + 1] = randf(1.0f, 1.1f);
