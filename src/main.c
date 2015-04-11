@@ -46,6 +46,9 @@ int main(int argc, char *argv[])
 
   g_main_loop_run(loop);
 
+  // debug
+  GLERROR();
+
   g_main_loop_unref(loop);
   return EXIT_SUCCESS;
 }
