@@ -101,13 +101,14 @@ static int render_string(const char *text,
                          float x, float y, float z,
                          float w, float h, float d)
 {
-  int      i, isc, tlen;
+  int      i, isc, len, tlen;
   float    lx, lw;
   GLfloat  *vert, *verttxc;
   GLushort *id;
 
+  len = strlen(text);
   tlen = 0;
-  for (i = 0; text[i] != '\0'; ++i)
+  for (i = 0; i < len; ++i)
     if (text[i] != ' ')
       ++tlen;
 
@@ -121,11 +122,11 @@ static int render_string(const char *text,
     }
   verttxc = vert + 4 * 3 * tlen;
 
-  lw = w / tlen;
+  lw = w / len;
   lx = x;
 
   isc = 0;
-  for (i = 0; text[i + isc] != '\0'; ++i)
+  for (i = 0; i + isc < len; ++i)
     {
       int j, offset, inc;
 
