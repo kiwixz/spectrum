@@ -54,7 +54,7 @@ static const GLfloat TEXVERT[8] = {
 static ButtonInfo infos[BUTTONSLEN];
 static GLuint     vbos[BUTTONSLEN], vboi, vbotex;
 
-static void generate_texquad(GLfloat *vert,
+static void generate_quad(GLfloat *vert,
                              float x, float y, float xw, float yh)
 {
 #define VERTICES(a, b) vert[a] = vert[b]
@@ -117,7 +117,7 @@ void buttons_update()
     {
       GLfloat vert[4 * 3] = {0};
 
-      generate_texquad(vert, render_itofx(infos[b].x), render_itofy(infos[b].y),
+      generate_quad(vert, render_itofx(infos[b].x), render_itofy(infos[b].y),
                        render_itofx(infos[b].xw), render_itofy(infos[b].yh));
 
       glBindBuffer(GL_ARRAY_BUFFER, vbos[b]);

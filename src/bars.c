@@ -24,8 +24,7 @@
 #include "shared.h"
 #include "spectrum.h"
 
-#define VERTICES(a, b, c) \
-  vert[index + a] = vert[index + b] = vert[index + c]
+#define VERTICES(a, b, c) vert[index + a] = vert[index + b] = vert[index + c]
 
 #define SPACESIDE 0.1f
 #define SPACEBETWEEN 0.005f
@@ -37,7 +36,7 @@ static const float BARSW = (1.0f - 2 * SPACESIDE) / SPECBANDS - SPACEBETWEEN,
 static GLfloat *vert;
 static GLuint  vbo;
 
-static void make_rectangle(int index,
+static void generate_quad(int index,
                            float x, float y, float z,
                            float w, float h, float d)
 {
@@ -49,39 +48,39 @@ static void make_rectangle(int index,
   VERTICES(8, 11, 14) = z - d;
 }
 
-static float make_bar(int bar, float x) // return next bar's x
+static float generate_bar(int bar, float x) // return next bar's x
 {
   int index;
 
   index = bar * 6 * 18;
 
   // front
-  make_rectangle(index, x, BARSY, 0.0f,
+  generate_quad(index, x, BARSY, 0.0f,
                  BARSW, BARSMINH, 0.0f);
   index += 18;
 
   // back
-  make_rectangle(index, x, BARSY, BARSD,
+  generate_quad(index, x, BARSY, BARSD,
                  BARSW, BARSMINH, 0.0f);
   index += 18;
 
   // down
-  make_rectangle(index, x, BARSY, 0.0f,
+  generate_quad(index, x, BARSY, 0.0f,
                  BARSW, 0.0f, -BARSD);
   index += 18;
 
   // up
-  make_rectangle(index, x, BARSY + BARSMINH, 0.0f,
+  generate_quad(index, x, BARSY + BARSMINH, 0.0f,
                  BARSW, 0.0f, -BARSD);
   index += 18;
 
   // left
-  make_rectangle(index, x, BARSY, 0.0f,
+  generate_quad(index, x, BARSY, 0.0f,
                  0.0f, BARSMINH, -BARSD);
   index += 18;
 
   // right
-  make_rectangle(index, x + BARSW, BARSY, 0.0f,
+  generate_quad(index, x + BARSW, BARSY, 0.0f,
                  0.0f, BARSMINH, -BARSD);
 
   return vert[index + 6] + SPACEBETWEEN; // because right face is the last
@@ -99,9 +98,9 @@ int bars_new()
       return -1;
     }
 
-  x = make_bar(0, SPACESIDE);
+  x = generate_bar(0, SPACESIDE);
   for (bar = 1; bar < SPECBANDS; ++bar)
-    x = make_bar(bar, x);
+    x = generate_bar(bar, x);
 
   glGenBuffers(1, &vbo);
   return 0;
