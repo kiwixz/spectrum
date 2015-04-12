@@ -77,7 +77,6 @@ static void open_url_download(GtkWidget *widget, gpointer *data)
   urlw = (UrlWidgets *)data;
   gtk_progress_bar_set_text(GTK_PROGRESS_BAR(urlw->progressbar),
                             "Initializing...");
-  g_main_context_iteration(NULL, TRUE);
 
   if (regcomp(&nregex, "/tmp/.+\\.m4a", REG_EXTENDED)
       || regcomp(&pregex, DOWNLOADER_REGEX, REG_EXTENDED))
@@ -134,8 +133,6 @@ static void open_url_download(GtkWidget *widget, gpointer *data)
       buffer[matches[1].rm_eo] = '\0';
       gtk_progress_bar_set_fraction(GTK_PROGRESS_BAR(urlw->progressbar),
                                     atoi(buffer + matches[1].rm_so) / 100.0f);
-
-      g_main_context_iteration(NULL, TRUE);
     }
 
   pclose(fp);
@@ -184,11 +181,11 @@ static void open_url()
 
   // table
   gtk_table_set_row_spacings(GTK_TABLE(table), 8);
-  gtk_table_attach(GTK_TABLE(table), labelalign,        0, 1, 0, 1,
+  gtk_table_attach(GTK_TABLE(table), labelalign, 0, 1, 0, 1,
                    GTK_FILL, GTK_FILL, 0, 0);
-  gtk_table_attach(GTK_TABLE(table), urlw->textbox,     0, 2, 1, 2,
+  gtk_table_attach(GTK_TABLE(table), urlw->textbox, 0, 2, 1, 2,
                    GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
-  gtk_table_attach(GTK_TABLE(table), buttonalign,       1, 2, 2, 3,
+  gtk_table_attach(GTK_TABLE(table), buttonalign, 1, 2, 2, 3,
                    GTK_FILL, GTK_FILL, 0, 0);
   gtk_table_attach(GTK_TABLE(table), urlw->progressbar, 0, 2, 3, 4,
                    GTK_EXPAND | GTK_FILL, GTK_FILL, 0, 0);
@@ -217,7 +214,7 @@ void open_audio()
   gtk_window_set_title(GTK_WINDOW(window), "Open");
   gtk_window_set_default_size(GTK_WINDOW(window), 256, 128);
   gtk_container_set_border_width(GTK_CONTAINER(window), 8);
-  g_signal_connect(window,     "destroy", G_CALLBACK(on_destroy), NULL);
+  g_signal_connect(window, "destroy", G_CALLBACK(on_destroy), NULL);
 
   // buttons
   g_signal_connect(buttonfile, "clicked",
@@ -225,8 +222,8 @@ void open_audio()
   g_signal_connect(buttonurl, "clicked",
                    G_CALLBACK(open_url), NULL);
 
-  gtk_container_add(GTK_CONTAINER(box),    buttonfile);
-  gtk_container_add(GTK_CONTAINER(box),    buttonurl);
+  gtk_container_add(GTK_CONTAINER(box), buttonfile);
+  gtk_container_add(GTK_CONTAINER(box), buttonurl);
   gtk_container_add(GTK_CONTAINER(window), box);
 
   gtk_widget_show_all(window);

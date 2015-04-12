@@ -58,8 +58,11 @@ static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
 
           s = gst_message_get_structure(msg);
 
-          if (strcmp(gst_structure_get_name(s), "spectrum") == 0)
-            spectrum_parse(s);
+          if (strcmp(gst_structure_get_name(s), "spectrum"))
+            break;
+
+          spectrum_parse(s);
+          window_redraw();
 
           break;
         }
@@ -75,7 +78,7 @@ static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
           GError *err;
 
           gst_message_parse_error(msg, &err, NULL);
-          ERROR("The player failed:\n%s", err->message);
+          ERROR("Failed to play: %s", err->message);
           g_error_free(err);
 
           g_main_loop_quit(loop);

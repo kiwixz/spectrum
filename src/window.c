@@ -38,6 +38,7 @@ static const int W = 1280,
                  H = 720,
                  RESIZINGMS = 128;
 
+static GtkWidget *glarea;
 static int       areaw, areah, lastresize, clicking, motionblur;
 static GMainLoop *loop;
 
@@ -156,32 +157,6 @@ static gboolean on_configure(GtkWidget *area,
   return TRUE;
 }
 
-static gboolean on_tick(gpointer data)
-{
-  static int lasttick;
-
-  int       tick;
-  GtkWidget *area;
-
-  tick = GETMS();
-  if (tick - lastresize < RESIZINGMS)
-    {
-      if (tick - lasttick < RESIZINGMS)
-        return TRUE;
-
-      lasttick = tick;
-    }
-
-  area = GTK_WIDGET(data);
-  gdk_window_invalidate_rect(area->window, &area->allocation, FALSE);
-  gdk_window_process_updates(area->window, FALSE);
-
-  if (tick - lastresize >= RESIZINGMS)
-    motionblur = 1;
-
-  return TRUE;
-}
-
 int window_new(GMainLoop *mainloop)
 {
   GtkWidget     *window, *area;
@@ -197,7 +172,7 @@ int window_new(GMainLoop *mainloop)
   // definitions
   window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   accel = gtk_accel_group_new();
-  area = gtk_drawing_area_new();
+  glarea = area = gtk_drawing_area_new();
 
   // window
   gtk_window_set_title(GTK_WINDOW(window), "Spectrum");
@@ -246,8 +221,28 @@ int window_new(GMainLoop *mainloop)
   if (player_new(loop))
     return -1;
 
-  // g_timeout_add(1000.0f / 10, on_tick, area);
-  g_idle_add(on_tick, area);
-
   return 0;
+}
+
+void window_redraw()
+{
+  static int lasttick;
+
+  int tick;
+
+  tick = GETMS();
+  if (tick - lastresize < RESIZINGMS)
+    {
+      if (tick - lasttick < RESIZINGMS)
+        return;
+
+      lasttick = tick;
+    }
+
+  gtk_widget_queue_draw(glarea);
+  while (gtk_events_pending())
+    gtk_main_iteration_do(FALSE); // clean event loop (other events too)
+
+  if (tick - lastresize >= RESIZINGMS)
+    motionblur = 1;
 }
