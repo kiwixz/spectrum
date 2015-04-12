@@ -40,55 +40,64 @@ typedef struct
   float   rgb;
 } ButtonInfo;
 
-#define VERTICES(a, b, c) \
-  vert[a] = vert[b] = vert[c]
-
 static const float   ILLUMINATION_DECAY = 0.05f;
-static const GLfloat TEXVERT[12] = {
+static const GLubyte VBOID[6] = {
+  0, 1, 2, 2, 3, 0
+};
+static const GLfloat TEXVERT[8] = {
   0.0f, 1.0f,
   0.0f, 0.0f,
   1.0f, 0.0f,
-  1.0f, 0.0f,
-  1.0f, 1.0f,
-  0.0f, 1.0f
+  1.0f, 1.0f
 };
 
 static ButtonInfo infos[BUTTONSLEN];
-static GLuint     vbos[BUTTONSLEN];
+static GLuint     vbos[BUTTONSLEN], vboi, vbotex;
 
-static void generate_texquad(GLfloat vert[18 + 12],
+static void generate_texquad(GLfloat *vert,
                              float x, float y, float xw, float yh)
 {
-  VERTICES(0,  3, 15) = x;
-  VERTICES(6,  9, 12) = xw;
-  VERTICES(4,  7, 10) = y;
-  VERTICES(1, 13, 16) = yh;
+#define VERTICES(a, b) vert[a] = vert[b]
 
-  memcpy(vert + 18, TEXVERT, sizeof(TEXVERT));
+  VERTICES(0, 3) = x;
+  VERTICES(4, 7) = y;
+  VERTICES(6, 9) = xw;
+  VERTICES(1, 10) = yh;
+
+#undef VERTICES
 }
 
 static void generate_button(Button b, Texture tex,
                             int x, int y, int xw, int yh)
 {
 #define COPY(v) infos[b].v = v;
+
   COPY(tex);
-  COPY(  x);
-  COPY(  y);
-  COPY( xw);
-  COPY( yh);
-#undef COPY
+  COPY(x);
+  COPY(y);
+  COPY(xw);
+  COPY(yh);
 
   infos[b].rgb = 1.0f;
+
+#undef COPY
 }
 
 int buttons_new()
 {
   glGenBuffers(BUTTONSLEN, vbos);
+  glGenBuffers(BUTTONSLEN, &vboi);
+  glGenBuffers(BUTTONSLEN, &vbotex);
 
-  generate_button(BUTTON_PLAY, TEX_PLAY, 16,          48,
+  generate_button(BUTTON_PLAY, TEX_PLAY, 16, 48,
                   16 + 32, 48 + 32);
   generate_button(BUTTON_STOP, TEX_STOP, 16 + 32 + 8, 48,
                   16 + 32 + 8 + 32, 48 + 32);
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboi);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(VBOID), VBOID, GL_STATIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, vbotex);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(TEXVERT), TEXVERT, GL_STATIC_DRAW);
 
   return 0;
 }
@@ -96,6 +105,8 @@ int buttons_new()
 void buttons_delete()
 {
   glDeleteBuffers(BUTTONSLEN, vbos);
+  glDeleteBuffers(BUTTONSLEN, &vboi);
+  glDeleteBuffers(BUTTONSLEN, &vbotex);
 }
 
 void buttons_update()
@@ -104,14 +115,13 @@ void buttons_update()
 
   for (b = 0; b < BUTTONSLEN; ++b)
     {
-      GLfloat vert[18 + 12] = {0};
+      GLfloat vert[4 * 3] = {0};
 
       generate_texquad(vert, render_itofx(infos[b].x), render_itofy(infos[b].y),
                        render_itofx(infos[b].xw), render_itofy(infos[b].yh));
 
       glBindBuffer(GL_ARRAY_BUFFER, vbos[b]);
-      glBufferData(GL_ARRAY_BUFFER, (18 + 12) * sizeof(GLfloat),
-                   vert, GL_STATIC_DRAW);
+      glBufferData(GL_ARRAY_BUFFER, sizeof(vert), vert, GL_STATIC_DRAW);
     }
 }
 
@@ -123,9 +133,13 @@ void buttons_render()
 
   glEnableVertexAttribArray(POSITION_ATTRIB);
   glEnableVertexAttribArray(TEXCOORD_ATTRIB);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboi);
+  glBindBuffer(GL_ARRAY_BUFFER, vbotex);
+  glVertexAttribPointer(TEXCOORD_ATTRIB, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
   for (b = 0; b < BUTTONSLEN; ++b)
     {
+      textures_bind(infos[b].tex);
       if (infos[b].rgb > 1.0f)
         {
           glVertexAttrib4f(COLOR_ATTRIB,
@@ -137,11 +151,8 @@ void buttons_render()
 
       glBindBuffer(GL_ARRAY_BUFFER, vbos[b]);
       glVertexAttribPointer(POSITION_ATTRIB, 3, GL_FLOAT, GL_FALSE, 0, 0);
-      glVertexAttribPointer(TEXCOORD_ATTRIB, 2, GL_FLOAT, GL_FALSE,
-                            0, (GLvoid *)(18 * sizeof(GLfloat)));
 
-      textures_bind(infos[b].tex);
-      glDrawArrays(GL_TRIANGLES, 0, 6);
+      glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0);
     }
 
   glDisableVertexAttribArray(POSITION_ATTRIB);
@@ -150,10 +161,7 @@ void buttons_render()
 
 void buttons_set_isplaying(int b)
 {
-  if (b)
-    infos[BUTTON_PLAY].tex = TEX_PAUSE;
-  else
-    infos[BUTTON_PLAY].tex = TEX_PLAY;
+  infos[BUTTON_PLAY].tex = b ? TEX_PAUSE : TEX_PLAY;
 }
 
 void onclick(Button b)
