@@ -31,11 +31,11 @@
 #include "textures.h"
 #include "timebar.h"
 
-static const float         MOTIONBLUR = 0.66f;
+static const float   MOTIONBLUR = 0.64f;
 static const GLubyte FBOVBOID[6] = {
   0, 1, 2, 2, 3, 0
 };
-static const GLfloat       FBOVBOVERT[2 * 2 * 4] = {
+static const GLfloat FBOVBOVERT[2 * 2 * 4] = {
   -1.0f, 1.0f,
   -1.0f, -1.0f,
   1.0f, -1.0f,
@@ -154,7 +154,7 @@ int render_setup(GtkWidget *area)
           || texts_new() || timebar_new())
         return -1;
 
-      //glEnable(GL_CULL_FACE);
+      glEnable(GL_CULL_FACE);
       glEnable(GL_BLEND);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
