@@ -57,13 +57,11 @@ static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
           const GstStructure *s;
 
           s = gst_message_get_structure(msg);
-
           if (strcmp(gst_structure_get_name(s), "spectrum"))
             break;
 
           spectrum_parse(s);
           window_redraw();
-
           break;
         }
 

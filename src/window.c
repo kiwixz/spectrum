@@ -91,32 +91,6 @@ static void on_destroy(GtkWidget *win, gpointer data)
   g_main_loop_quit(loop);
 }
 
-static gboolean on_expose(GtkWidget *area, GdkEventExpose *event, gpointer data)
-{
-  GdkGLDrawable *gldrawable;
-
-  areaw = area->allocation.width;
-  areah = area->allocation.height;
-  gldrawable = gtk_widget_get_gl_drawable(area);
-  if (!gdk_gl_drawable_gl_begin(gldrawable, gtk_widget_get_gl_context(area)))
-    {
-      ERROR("Failed to initialize rendering");
-      return FALSE;
-    }
-
-  if (render(motionblur))
-    return FALSE;
-
-  if (gdk_gl_drawable_is_double_buffered(gldrawable))
-    gdk_gl_drawable_swap_buffers(gldrawable);
-  else
-    glFlush();
-
-  gdk_gl_drawable_gl_end(gldrawable);
-
-  return TRUE;
-}
-
 static gboolean on_configure(GtkWidget *area,
                              GdkEventConfigure *event, gpointer data)
 {
@@ -151,6 +125,8 @@ static gboolean on_configure(GtkWidget *area,
 
   gdk_gl_drawable_gl_end(gldrawable);
 
+  areaw = glarea->allocation.width;
+  areah = glarea->allocation.height;
   motionblur = 0;
   lastresize = GETMS();
 
@@ -214,7 +190,6 @@ int window_new(GMainLoop *mainloop)
   g_signal_connect(area, "button-release-event", G_CALLBACK(on_release), NULL);
   g_signal_connect(area, "motion-notify-event", G_CALLBACK(on_motion), NULL);
   g_signal_connect(area, "configure-event", G_CALLBACK(on_configure), NULL);
-  g_signal_connect(area, "expose-event", G_CALLBACK(on_expose), NULL);
 
   gtk_widget_show_all(window);
 
@@ -224,25 +199,41 @@ int window_new(GMainLoop *mainloop)
   return 0;
 }
 
-void window_redraw()
+int window_redraw()
 {
   static int lasttick;
 
-  int tick;
+  int           tick;
+  GdkGLDrawable *gldrawable;
 
   tick = GETMS();
   if (tick - lastresize < RESIZINGMS)
     {
       if (tick - lasttick < RESIZINGMS)
-        return;
+        return 0;
 
       lasttick = tick;
     }
 
-  gtk_widget_queue_draw(glarea);
-  while (gtk_events_pending())
-    gtk_main_iteration_do(FALSE); // clean event loop (other events too)
+  gldrawable = gtk_widget_get_gl_drawable(glarea);
+  if (!gdk_gl_drawable_gl_begin(gldrawable, gtk_widget_get_gl_context(glarea)))
+    {
+      ERROR("Failed to initialize rendering");
+      return -1;
+    }
+
+  if (render(motionblur))
+    return -1;
+
+  if (gdk_gl_drawable_is_double_buffered(gldrawable))
+    gdk_gl_drawable_swap_buffers(gldrawable);
+  else
+    glFlush();
+
+  gdk_gl_drawable_gl_end(gldrawable);
 
   if (tick - lastresize >= RESIZINGMS)
     motionblur = 1;
+
+  return 0;
 }

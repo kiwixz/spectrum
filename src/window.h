@@ -26,6 +26,6 @@
 #include <gst/gst.h>
 
 int  window_new(GMainLoop *loop);
-void window_redraw();
+int window_redraw();
 
 #endif
