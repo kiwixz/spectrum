@@ -32,15 +32,22 @@
 #include "spectrum.h"
 #include "textures.h"
 
-#define GETMS() 1000 * clock() / CLOCKS_PER_SEC
-
 static const int W = 1280,
-                 H = 720,
-                 RESIZINGMS = 128;
+                 H = 720;
+static const unsigned int RESIZINGMS = 128;
 
-static GtkWidget *glarea;
-static int       areaw, areah, lastresize, clicking, motionblur;
-static GMainLoop *loop;
+static GtkWidget     *glarea;
+static int           areaw, areah, clicking, motionblur;
+static unsigned long lastresize;
+static GMainLoop     *loop;
+
+static unsigned long get_ms()
+{
+  struct timespec t;
+
+  clock_gettime(CLOCK_MONOTONIC, &t);
+  return t.tv_sec * 1000 + t.tv_nsec / 1000000L;
+}
 
 static gboolean on_press(GtkWidget *area, GdkEventButton *event, gpointer data)
 {
@@ -128,7 +135,7 @@ static gboolean on_configure(GtkWidget *area,
   areaw = glarea->allocation.width;
   areah = glarea->allocation.height;
   motionblur = 0;
-  lastresize = GETMS();
+  lastresize = get_ms();
 
   return TRUE;
 }
@@ -201,15 +208,15 @@ int window_new(GMainLoop *mainloop)
 
 int window_redraw()
 {
-  static int lasttick;
+  static unsigned long lasttick;
 
-  int           tick;
+  unsigned long tick;
   GdkGLDrawable *gldrawable;
 
-  tick = GETMS();
+  tick = get_ms();
   if (tick - lastresize < RESIZINGMS)
     {
-      if (tick - lasttick < RESIZINGMS)
+      if (tick - lasttick < 1000 / FPS)
         return 0;
 
       lasttick = tick;
@@ -234,6 +241,11 @@ int window_redraw()
 
   if (tick - lastresize >= RESIZINGMS)
     motionblur = 1;
+
+#if 1 // should be done automatically in "idle" time ?
+    while (g_main_context_pending(NULL))
+      g_main_context_iteration(NULL, FALSE);
+#endif
 
   return 0;
 }

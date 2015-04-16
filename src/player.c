@@ -32,8 +32,6 @@
   static const char PATHSEPARATOR = '/';
 #endif
 
-static const int MSGPERSEC = 60;
-
 static gint64     position;
 static char       *name;
 static GstElement *pipeline, *source;
@@ -114,7 +112,7 @@ static int set_name(const char *file)
   name = malloc((len + 1) * sizeof(char));
   if (!name)
     {
-      ERROR("Failed to malloc the %d-long name.", len);
+      ERROR("Failed to malloc the %d-long name", len);
       return -1;
     }
 
@@ -166,7 +164,7 @@ int player_new(GMainLoop *loop)
 
   // properties
   g_object_set(G_OBJECT(spec), "bands", SPECBANDS,
-               "interval", 1000000000L / MSGPERSEC, "threshold", MINDB, NULL);
+               "interval", 1000000000L / FPS, "threshold", MINDB, NULL);
 
   bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
   buswatch = gst_bus_add_watch(bus, on_message, loop);
