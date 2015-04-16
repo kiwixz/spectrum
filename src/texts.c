@@ -26,6 +26,7 @@
 #include "render.h"
 #include "shaders.h"
 #include "shared.h"
+#include "spectrum.h"
 #include "textures.h"
 
 #define FONTW 32 // letters by dimension
@@ -177,7 +178,7 @@ static int render_string(const char *text,
 int texts_render()
 {
   static int  lastsec, fps;
-  static char fpsstr[16];
+  static char fpsstr[64];
   int         sec, len;
   float       w, h, ratio;
   char        timer[32] = {0};
@@ -191,7 +192,7 @@ int texts_render()
     ++fps;
   else
     {
-      snprintf(fpsstr, 16, "fps: %d", fps + 1);
+      snprintf(fpsstr, sizeof(fpsstr), "fps: %d", fps + 1);
 
       fps = 0;
       lastsec = sec;

@@ -19,7 +19,6 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <time.h>
 #include <GL/glew.h>
 #include <gdk/gdkkeysyms.h>
 #include "window.h"
@@ -34,20 +33,10 @@
 
 static const int W = 1280,
                  H = 720;
-static const unsigned int RESIZINGMS = 128;
 
-static GtkWidget     *glarea;
-static int           areaw, areah, clicking, motionblur;
-static unsigned long lastresize;
-static GMainLoop     *loop;
-
-static unsigned long get_ms()
-{
-  struct timespec t;
-
-  clock_gettime(CLOCK_MONOTONIC, &t);
-  return t.tv_sec * 1000 + t.tv_nsec / 1000000L;
-}
+static GtkWidget *glarea;
+static int       areaw, areah, clicking, motionblur;
+static GMainLoop *loop;
 
 static gboolean on_press(GtkWidget *area, GdkEventButton *event, gpointer data)
 {
@@ -135,8 +124,32 @@ static gboolean on_configure(GtkWidget *area,
   areaw = glarea->allocation.width;
   areah = glarea->allocation.height;
   motionblur = 0;
-  lastresize = get_ms();
 
+  return TRUE;
+}
+
+static gboolean redraw(gpointer nul)
+{
+  GdkGLDrawable *gldrawable;
+
+  gldrawable = gtk_widget_get_gl_drawable(glarea);
+  if (!gdk_gl_drawable_gl_begin(gldrawable, gtk_widget_get_gl_context(glarea)))
+    {
+      ERROR("Failed to initialize rendering");
+      return FALSE;
+    }
+
+  if (render(motionblur))
+    return FALSE;
+
+  if (gdk_gl_drawable_is_double_buffered(gldrawable))
+    gdk_gl_drawable_swap_buffers(gldrawable);
+  else
+    glFlush();
+
+  gdk_gl_drawable_gl_end(gldrawable);
+
+  motionblur = 1;
   return TRUE;
 }
 
@@ -203,49 +216,7 @@ int window_new(GMainLoop *mainloop)
   if (player_new(loop))
     return -1;
 
-  return 0;
-}
-
-int window_redraw()
-{
-  static unsigned long lasttick;
-
-  unsigned long tick;
-  GdkGLDrawable *gldrawable;
-
-  tick = get_ms();
-  if (tick - lastresize < RESIZINGMS)
-    {
-      if (tick - lasttick < 1000 / FPS)
-        return 0;
-
-      lasttick = tick;
-    }
-
-  gldrawable = gtk_widget_get_gl_drawable(glarea);
-  if (!gdk_gl_drawable_gl_begin(gldrawable, gtk_widget_get_gl_context(glarea)))
-    {
-      ERROR("Failed to initialize rendering");
-      return -1;
-    }
-
-  if (render(motionblur))
-    return -1;
-
-  if (gdk_gl_drawable_is_double_buffered(gldrawable))
-    gdk_gl_drawable_swap_buffers(gldrawable);
-  else
-    glFlush();
-
-  gdk_gl_drawable_gl_end(gldrawable);
-
-  if (tick - lastresize >= RESIZINGMS)
-    motionblur = 1;
-
-#if 1 // should be done automatically in "idle" time ?
-    while (g_main_context_pending(NULL))
-      g_main_context_iteration(NULL, FALSE);
-#endif
+  g_timeout_add_full(G_PRIORITY_DEFAULT_IDLE, 1000 / FPS, redraw, NULL, NULL);
 
   return 0;
 }

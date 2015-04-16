@@ -32,10 +32,10 @@
   static const char PATHSEPARATOR = '/';
 #endif
 
-static gint64     position;
-static char       *name;
-static GstElement *pipeline, *source;
-static guint      buswatch;
+static gint64             position;
+static char               *name;
+static GstElement         *pipeline, *source;
+static guint              buswatch;
 
 static void end_of_play()
 {
@@ -59,7 +59,6 @@ static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
             break;
 
           spectrum_parse(s);
-          window_redraw();
           break;
         }
 
@@ -204,12 +203,12 @@ void player_toggle()
   if (state == GST_STATE_PLAYING)
     {
       gst_element_set_state(pipeline, GST_STATE_PAUSED);
-      buttons_set_isplaying(0);
+        buttons_set_isplaying(0);
     }
   else if (name[0])
     {
       gst_element_set_state(pipeline, GST_STATE_PLAYING);
-      buttons_set_isplaying(1);
+        buttons_set_isplaying(1);
     }
 }
 

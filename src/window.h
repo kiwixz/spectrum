@@ -25,7 +25,6 @@
 #include <gdk/gdkgl.h>
 #include <gst/gst.h>
 
-int  window_new(GMainLoop *loop);
-int window_redraw();
+int window_new(GMainLoop *loop);
 
 #endif
