@@ -42,6 +42,7 @@ static void end_of_play()
 {
   particles_end();
   buttons_set_isplaying(0);
+  spectrum_reset();
   position = 0;
 }
 

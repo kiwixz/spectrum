@@ -30,6 +30,7 @@ int spectrum_new();
 void spectrum_delete();
 
 void spectrum_parse(const GstStructure *s);
+void spectrum_reset();
 
 float spectrum_get_averagemag();
 float spectrum_get_averagevel();

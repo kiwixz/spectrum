@@ -90,6 +90,20 @@ void spectrum_parse(const GstStructure *s)
   averagevel /= SPECBANDS;
 }
 
+void spectrum_reset()
+{
+  int band;
+
+  g_mutex_lock(&specmutex);
+  for (band = 0; band < SPECBANDS; ++band)
+    spectrum[band].mag = spectrum[band].vel = 0.0f;
+
+  g_mutex_unlock(&specmutex);
+
+  averagemag = 0;
+  averagevel = 0;
+}
+
 float spectrum_get_averagemag()
 {
   return averagemag;
