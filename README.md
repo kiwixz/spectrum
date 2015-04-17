@@ -1,5 +1,7 @@
 # spectrum
 
+[Feel free to contact me by email.](mailto:kiwixz@users.noreply.github.com)
+
 ## Description
 
 This is a simple audio spectrum visualizer written in C. It's only tested on Linux (more precisely Arch Linux).
