@@ -21,17 +21,19 @@
 #include <stdio.h>
 #include <string.h>
 #include "buttons.h"
+#include "open.h"
 #include "player.h"
 #include "render.h"
 #include "shaders.h"
 #include "shared.h"
 #include "textures.h"
 
-#define BUTTONSLEN 2
+#define BUTTONSLEN 3
 typedef enum
 {
-  BUTTON_PLAY = 0,
-  BUTTON_STOP = 1
+  BUTTON_OPEN = 0,
+  BUTTON_PLAY = 1,
+  BUTTON_STOP = 2
 } Button;
 typedef struct
 {
@@ -55,7 +57,7 @@ static ButtonInfo infos[BUTTONSLEN];
 static GLuint     vbos[BUTTONSLEN], vboi, vbotex;
 
 static void generate_quad(GLfloat *vert,
-                             float x, float y, float xw, float yh)
+                          float x, float y, float xw, float yh)
 {
 #define VERTICES(a, b) vert[a] = vert[b]
 
@@ -89,6 +91,8 @@ int buttons_new()
   glGenBuffers(BUTTONSLEN, &vboi);
   glGenBuffers(BUTTONSLEN, &vbotex);
 
+  generate_button(BUTTON_OPEN, TEX_OPEN, 16, 96,
+                  16 + 32, 96 + 32);
   generate_button(BUTTON_PLAY, TEX_PLAY, 16, 48,
                   16 + 32, 48 + 32);
   generate_button(BUTTON_STOP, TEX_STOP, 16 + 32 + 8, 48,
@@ -118,7 +122,7 @@ void buttons_update()
       GLfloat vert[4 * 3] = {0};
 
       generate_quad(vert, render_itofx(infos[b].x), render_itofy(infos[b].y),
-                       render_itofx(infos[b].xw), render_itofy(infos[b].yh));
+                    render_itofx(infos[b].xw), render_itofy(infos[b].yh));
 
       glBindBuffer(GL_ARRAY_BUFFER, vbos[b]);
       glBufferData(GL_ARRAY_BUFFER, sizeof(vert), vert, GL_STATIC_DRAW);
@@ -168,6 +172,12 @@ void onclick(Button b)
 {
   switch (b)
     {
+      case BUTTON_OPEN:
+        {
+          open_audio();
+          break;
+        }
+
       case BUTTON_PLAY:
         {
           player_toggle();

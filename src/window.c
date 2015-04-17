@@ -23,7 +23,6 @@
 #include <gdk/gdkkeysyms.h>
 #include "window.h"
 #include "buttons.h"
-#include "open.h"
 #include "player.h"
 #include "render.h"
 #include "shaders.h"
@@ -179,8 +178,6 @@ int window_new(GMainLoop *mainloop)
   gtk_window_add_accel_group(GTK_WINDOW(window), accel);
   gtk_accel_group_connect(accel, GDK_KEY_space, 0, 0,
                           g_cclosure_new(player_toggle, 0, 0));
-  gtk_accel_group_connect(accel, GDK_KEY_O, 0, 0,
-                          g_cclosure_new(open_audio, 0, 0));
 
   // area
   gtk_container_add(GTK_CONTAINER(window), area);
