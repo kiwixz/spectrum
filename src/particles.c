@@ -26,7 +26,7 @@
 
 typedef struct
 {
-  float movx, movy;
+  float movx, movy, opacity;
 } Particle;
 
 #define OUTOFRANGE(f) f < -0.1f || f > 1.1f
@@ -35,8 +35,10 @@ typedef struct
 
 #define NUMBER 2048
 
-static const int SIZE = 5;
+static const int SIZE = 5,
+                 ANIMLEN = 512;
 
+static int      start, end;
 static GLuint   vbo;
 static Particle parts[NUMBER];
 static GLfloat  vert[NUMBER * 4];
@@ -59,7 +61,7 @@ static void respawn_particle(int index, int vindex)
   vert[vindex] = randf(-0.1f, 1.1f);
   vert[vindex + 1] = randf(1.0f, 1.1f);
 
-  vert[NUMBER * 3 + index] = randf(0.1f, 1.0f);
+  parts[index].opacity = vert[3 * NUMBER + index] = randf(0.1f, end / ANIMLEN);
 }
 
 int particles_new()
@@ -69,14 +71,18 @@ int particles_new()
   glGenBuffers(1, &vbo);
   glPointSize(SIZE);
 
+  end = ANIMLEN;
   for (i = 0; i < NUMBER; ++i)
     {
-      int vi;
+      int iv;
 
-      vi = i * 3;
-      respawn_particle(i, vi);
-      vert[vi + 1] = randf(0.0f, 1.0f);
+      iv = i * 3;
+      respawn_particle(i, iv);
+
+      vert[iv + 1] = randf(0.0f, 1.1f);
+      vert[3 * NUMBER + i] = 0.0f;
     }
+  end = 0;
 
   return 0;
 }
@@ -89,6 +95,24 @@ void particles_delete()
 void particles_render()
 {
   int i;
+
+  if (end == -1)
+    return;
+  else if (start)
+    {
+      for (i = 0; i < NUMBER; ++i)
+        vert[3 * NUMBER + i] += parts[i].opacity / ANIMLEN;
+
+      --start;
+      ++end;
+    }
+  else if (end < ANIMLEN)
+    {
+      for (i = 0; i < NUMBER; ++i)
+        vert[3 * NUMBER + i] -= parts[i].opacity / ANIMLEN;
+
+      --end;
+    }
 
   shaders_use(PROG_PARTICLES);
 
@@ -108,17 +132,33 @@ void particles_render()
     }
 
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, NUMBER * 4 * sizeof(GLfloat),
+  glBufferData(GL_ARRAY_BUFFER, (3 + 1) * NUMBER * sizeof(GLfloat),
                vert, GL_STREAM_DRAW);
 
   glEnableVertexAttribArray(POSITION_ATTRIB);
   glEnableVertexAttribArray(COLOR_ATTRIB);
   glVertexAttribPointer(POSITION_ATTRIB, 3, GL_FLOAT, GL_FALSE, 0, 0);
-  glVertexAttribPointer(COLOR_ATTRIB,    1, GL_FLOAT, GL_FALSE,
-                        0, (GLvoid *)(NUMBER * 3 * sizeof(GLfloat)));
+  glVertexAttribPointer(COLOR_ATTRIB, 1, GL_FLOAT, GL_FALSE,
+                        0, (GLvoid *)(3 * NUMBER * sizeof(GLfloat)));
 
   glDrawArrays(GL_POINTS, 0, NUMBER);
 
   glDisableVertexAttribArray(POSITION_ATTRIB);
   glDisableVertexAttribArray(COLOR_ATTRIB);
+}
+
+void particles_start()
+{
+  start = ANIMLEN - end;
+
+  if (end == -1)
+    end = 0;
+}
+
+void particles_end()
+{
+  start = 0;
+
+  if (end > 0)
+    --end;
 }

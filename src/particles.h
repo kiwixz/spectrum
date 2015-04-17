@@ -24,5 +24,7 @@ int  particles_new();
 void particles_delete();
 
 void particles_render();
+void particles_start();
+void particles_end();
 
 #endif

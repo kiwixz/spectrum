@@ -22,6 +22,7 @@
 #include <string.h>
 #include "player.h"
 #include "buttons.h"
+#include "particles.h"
 #include "shared.h"
 #include "spectrum.h"
 #include "window.h"
@@ -32,13 +33,14 @@
   static const char PATHSEPARATOR = '/';
 #endif
 
-static gint64             position;
-static char               *name;
-static GstElement         *pipeline, *source;
-static guint              buswatch;
+static gint64     position;
+static char       *name;
+static GstElement *pipeline, *source;
+static guint      buswatch;
 
 static void end_of_play()
 {
+  particles_end();
   buttons_set_isplaying(0);
   position = 0;
 }
@@ -203,12 +205,14 @@ void player_toggle()
   if (state == GST_STATE_PLAYING)
     {
       gst_element_set_state(pipeline, GST_STATE_PAUSED);
-        buttons_set_isplaying(0);
+      particles_end();
+      buttons_set_isplaying(0);
     }
   else if (name[0])
     {
       gst_element_set_state(pipeline, GST_STATE_PLAYING);
-        buttons_set_isplaying(1);
+      particles_start();
+      buttons_set_isplaying(1);
     }
 }
 
@@ -221,6 +225,7 @@ int player_play_file(const char *file)
   g_object_set(G_OBJECT(source), "location", file, NULL);
   gst_element_set_state(pipeline, GST_STATE_PLAYING);
 
+  particles_start();
   buttons_set_isplaying(1);
   return 0;
 }
