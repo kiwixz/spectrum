@@ -24,7 +24,6 @@
 
 static const int KUP = 2,
                  KDOWN = 8;
-
 static const float DBRATIO = (1.0f - BARSY) / (MAXDB - MINDB);
 
 static float    averagemag, averagevel;
@@ -34,7 +33,6 @@ static GMutex   specmutex;
 int spectrum_new()
 {
   spectrum = calloc(SPECBANDS, sizeof(Spectrum));
-
   if (!spectrum)
     {
       ERROR("Failed to malloc spectrum");
@@ -51,12 +49,21 @@ void spectrum_delete()
 
 static void band_set(int band, float mag)
 {
-  if (mag > spectrum[band].mag)
-    spectrum[band].mag = (mag + (KUP - 1) * spectrum[band].mag) / KUP;
-  else
-    spectrum[band].mag = (mag + (KDOWN - 1) * spectrum[band].mag) / KDOWN;
+  float oldmag;
 
-  spectrum[band].vel = (mag + spectrum[band].vel) / 2;
+  oldmag = spectrum[band].mag;
+  if (mag > oldmag)
+    {
+      spectrum[band].mag = ((KUP - 1) * oldmag + mag) / KUP;
+    }
+  else
+    {
+      spectrum[band].mag = ((KDOWN - 1) * oldmag + mag) / KDOWN;
+    }
+
+  spectrum[band].vel = (spectrum[band].mag - mag) / 2;
+  if (spectrum[band].vel < 0)
+    spectrum[band].vel = -spectrum[band].vel;
 }
 
 void spectrum_parse(const GstStructure *s)

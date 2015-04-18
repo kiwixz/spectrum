@@ -26,7 +26,7 @@
 #define AUDIOFREQ 44100
 #define BARSY 0.3f
 #define FPS 60
-#define MAXDB -10
+#define MAXDB -30
 #define MINDB -80
 #define SMOOTHING 1
 #define SPECBANDS 64

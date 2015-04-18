@@ -89,17 +89,19 @@ static float generate_bar(int bar, float x) // return next bar's x
 
 int bars_new()
 {
-  int      i, inc;
+  int      i, len, inc;
   float    x;
   GLushort id[5 * SPECBANDS * 6] = {0};
 
+  len = 5 * SPECBANDS * 4 * (3 + 3);
+
   glGenBuffers(1, &vbo);
   glGenBuffers(1, &vboi);
-  vert = malloc(5 * SPECBANDS * 4 * 3 * sizeof(GLfloat));
+  vert = malloc(len * sizeof(GLfloat));
   if (!vert)
     {
       fprintf(stderr, "Failed to malloc bars' vert (%lu bits)",
-              5 * SPECBANDS * 4 * 3 * sizeof(GLfloat));
+              len * sizeof(GLfloat));
       return -1;
     }
 
@@ -122,6 +124,10 @@ int bars_new()
         }
     }
 
+  // set all green values to 1.0f
+  for (i = 5 * SPECBANDS * 4 * 3 + 1; i < len + 3; i += 3)
+    vert[i] = 1.0f;
+
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboi);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(id), id,
                GL_STATIC_DRAW);
@@ -135,7 +141,7 @@ void bars_delete()
   free(vert);
 }
 
-static void set_barh(int bar, float h)
+static void set_bar_h(int bar, GLfloat h)
 {
   int i;
 
@@ -147,34 +153,57 @@ static void set_barh(int bar, float h)
       = vert[i + 13] = vert[i + 16] = vert[i + 19] = vert[i + 22] // up
                 = vert[i + 25] = vert[i + 34] // left
                       = vert[i + 49] = vert[i + 58] // right
-                            = BARSY + h;
+                            = BARSY + h * (1.0f - BARSY);
+}
+
+static void set_bar_color(int bar, GLfloat r, GLfloat g, GLfloat b)
+{
+  int i, max;
+
+  max = 5 * SPECBANDS * 4 * 3 + 5 * (bar + 1) * 4 * 3;
+
+  for (i = 5 * SPECBANDS * 4 * 3 + 5 * bar * 4 * 3; i < max; i += 3)
+    {
+      vert[i] = r;
+      vert[i + 1] = g;
+      vert[i + 2] = b;
+    }
 }
 
 void bars_render()
 {
   int            bar;
-  float          average;
   const Spectrum *spectrum;
 
   spectrum = spectrum_get_and_lock();
 
   for (bar = 0; bar < SPECBANDS; ++bar)
-    set_barh(bar, spectrum[bar].mag);
+    {
+      set_bar_h(bar, spectrum[bar].mag);
+      set_bar_color(bar, 0.0f, 1.0f, spectrum[bar].mag);
+    }
 
   spectrum_unlock();
 
-  average = spectrum_get_averagemag();
-  glVertexAttrib4f(COLOR_ATTRIB, average, 1.0f, 2 * average, 1.0f);
-
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboi);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, 6 * SPECBANDS * 4 * 3 * sizeof(GLfloat),
+  glBufferData(GL_ARRAY_BUFFER,
+               5 * SPECBANDS * 4 * (3 + 3) *
+               sizeof(GLfloat),
                vert, GL_STREAM_DRAW);
 
   glEnableVertexAttribArray(POSITION_ATTRIB);
-  glVertexAttribPointer(POSITION_ATTRIB, 3, GL_FLOAT, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(COLOR_ATTRIB);
+  glVertexAttribPointer(POSITION_ATTRIB, 3, GL_FLOAT,
+                        GL_FALSE, 0, 0);
+  glVertexAttribPointer(COLOR_ATTRIB, 3, GL_FLOAT,
+                        GL_FALSE, 0,
+                        (GLvoid *)(5 * SPECBANDS * 4 *
+                                   3 * sizeof(GLfloat)));
 
-  glDrawElements(GL_TRIANGLES, 5 * SPECBANDS * 6, GL_UNSIGNED_SHORT, 0);
+  glDrawElements(GL_TRIANGLES, 5 * SPECBANDS * 6,
+                 GL_UNSIGNED_SHORT, 0);
 
   glDisableVertexAttribArray(POSITION_ATTRIB);
+  glDisableVertexAttribArray(COLOR_ATTRIB);
 }
