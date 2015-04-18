@@ -38,19 +38,28 @@ static const GLushort VBOID[6] = {
 static GLfloat *vert;
 static GLuint  vbo, vboi;
 
-static void generate_quad(int index,
-                          float x, float y, float z,
+static void generate_horizontal_quad(int index, float x, float y,
                           float w, float h, float d)
 {
 #define VERTICES(a, b) vert[index + a] = vert[index + b]
 
   VERTICES(0, 3) = x;
   VERTICES(4, 7) = y;
-  VERTICES(2, 5) = z;
+  VERTICES(2, 5) = 0.0f;
   VERTICES(6, 9) = x + w;
   VERTICES(1, 10) = y + h;
-  VERTICES(8, 11) = z - d;
+  VERTICES(8, 11) = d;
+}
 
+static void generate_vertical_quad(int index, float x, float y,
+                                   float w, float d)
+{
+  VERTICES(0, 3) = x;
+  VERTICES(4, 7) = VERTICES(1,10) = y;
+  VERTICES(5, 8) = 0.0f;
+  VERTICES(6, 9) = x + w;
+  VERTICES(2, 11) = d;
+  
 #undef VERTICES
 }
 
@@ -58,31 +67,26 @@ static float generate_bar(int bar, float x) // return next bar's x
 {
   int index;
 
-  index = bar * 5 * 4 * 3;
+  index = 5 * bar * 4 * 3;
 
   // front
-  generate_quad(index, x, BARSY, 0.0f,
-                BARSW, BARSMINH, 0.0f);
+  generate_horizontal_quad(index, x, BARSY, BARSW, BARSMINH, 0.0f);
   index += 4 * 3;
 
   // down
-  generate_quad(index, x, BARSY, 0.0f,
-                BARSW, 0.0f, -BARSD);
+  generate_vertical_quad(index, x + BARSW, BARSY, -BARSW, -BARSD);
   index += 4 * 3;
 
   // up
-  generate_quad(index, x, BARSY + BARSMINH, 0.0f,
-                BARSW, 0.0f, -BARSD);
+  generate_vertical_quad(index, x + BARSW, BARSY + BARSMINH, -BARSW, -BARSD);
   index += 4 * 3;
 
   // left
-  generate_quad(index, x, BARSY, 0.0f,
-                0.0f, BARSMINH, -BARSD);
+  generate_horizontal_quad(index, x, BARSY, 0.0f, BARSMINH, -BARSD);
   index += 4 * 3;
 
   // right
-  generate_quad(index, x + BARSW, BARSY, 0.0f,
-                0.0f, BARSMINH, -BARSD);
+  generate_horizontal_quad(index, x + BARSW, BARSY, 0.0f, BARSMINH, -BARSD);
 
   return vert[index + 6] + SPACEBETWEEN; // because right face is the "last"
 }
