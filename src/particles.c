@@ -37,6 +37,7 @@ typedef struct
 
 static const int SIZE = 5,
                  ANIMLEN = 512;
+static const float GOBACK = 0.08f;
 
 static int      start, end;
 static GLuint   vbo;
@@ -123,8 +124,8 @@ void particles_render()
       float k;
 
       iv = i * 3;
-      k = (spectrum_get_averagevel() + spectrum_get_averagemag()) / 2;
-
+      k = spectrum_get_averagevel() + spectrum_get_averagemag() - GOBACK;
+      
       vert[iv] += parts[i].movx * k;
       vert[iv + 1] += parts[i].movy * k;
 
