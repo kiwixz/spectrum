@@ -29,7 +29,7 @@
 #define SPACEBETWEEN 0.005f
 
 static const float BARSW = (1.0f - 2 * SPACESIDE) / SPECBANDS - SPACEBETWEEN,
-                   BARSMINH = 0.005f,
+                   BARSMINH = 0.01f,
                    BARSD = 0.0f;
 static const GLushort VBOID[6] = {
   0, 1, 2, 2, 3, 0

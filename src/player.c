@@ -33,7 +33,7 @@
   static const char PATHSEPARATOR = '/';
 #endif
 
-static gint64     position;
+static gint64     position, duration;
 static char       *name;
 static GstElement *pipeline, *source;
 static guint      buswatch;
@@ -43,16 +43,23 @@ static void end_of_play()
   particles_end();
   buttons_set_isplaying(0);
   spectrum_reset();
+
   position = 0;
 }
 
 static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
 {
-  GMainLoop *loop;
-
-  loop = (GMainLoop *)data;
   switch (GST_MESSAGE_TYPE(msg))
     {
+      case GST_MESSAGE_STREAM_START:
+      case GST_MESSAGE_DURATION_CHANGED:
+        {
+          if (!gst_element_query_duration(pipeline, GST_FORMAT_TIME, &duration))
+            duration = 0;
+
+          break;
+        }
+
       case GST_MESSAGE_ELEMENT:
         {
           const GstStructure *s;
@@ -67,7 +74,7 @@ static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
 
       case GST_MESSAGE_EOS:
         {
-          end_of_play();
+          player_stop();
           break;
         }
 
@@ -79,7 +86,7 @@ static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
           ERROR("Failed to play: %s", err->message);
           g_error_free(err);
 
-          g_main_loop_quit(loop);
+          g_main_loop_quit((GMainLoop *)data);
           break;
         }
     }
@@ -233,12 +240,10 @@ int player_play_file(const char *file)
 
 int player_set_position(float frac)
 {
-  gint64 max;
-
-  if (!gst_element_query_duration(pipeline, GST_FORMAT_TIME, &max)
-      || !gst_element_seek_simple(pipeline, GST_FORMAT_TIME,
-                                  GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT,
-                                  frac * max))
+  if (!duration || !gst_element_seek_simple(pipeline, GST_FORMAT_TIME,
+                                            GST_SEEK_FLAG_FLUSH |
+                                            GST_SEEK_FLAG_KEY_UNIT,
+                                            frac * duration))
     return -1;
 
   return 0;
@@ -258,9 +263,9 @@ const char *player_get_name()
 void player_get_time(char *time, int maxlen)
 {
   int    pos, posmin, possec, max, maxmin, maxsec;
-  gint64 gpos, gmax;
+  gint64 gpos;
 
-  if (!gst_element_query_duration(pipeline, GST_FORMAT_TIME, &gmax))
+  if (!duration)
     {
       time[0] = '\0';
       return;
@@ -276,7 +281,7 @@ void player_get_time(char *time, int maxlen)
   pos -= posmin * 600;
   possec = pos / 10;
 
-  max = gmax / 100000000L;
+  max = duration / 100000000L;
   maxmin = max / 600;
   max -= maxmin * 600;
   maxsec = max / 10;
@@ -288,13 +293,13 @@ void player_get_time(char *time, int maxlen)
 
 float player_get_time_frac()
 {
-  gint64 pos, max;
+  gint64 pos;
 
-  if (!gst_element_query_duration(pipeline, GST_FORMAT_TIME, &max))
+  if (!duration)
     return 0.0f;
 
   if (gst_element_query_position(pipeline, GST_FORMAT_TIME, &pos))
     position = pos;
 
-  return (double)position / max;
+  return (double)position / duration;
 }
