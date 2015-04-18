@@ -6,6 +6,8 @@
 
 This is a simple audio spectrum visualizer written in C. It's only tested on Linux (more precisely Arch Linux).
 
+![Loading screenshot...](https://github.com/kiwixz/spectrum/blob/master/screenshot.png "Screenshot playing an audio file")
+
 ## What you need
 
 An usual development environnement (a C compiler, GNU Make, etc) is needed. The Makefile use `c99` as an alias for the compiler. You need youtube-dl to open URLs.
