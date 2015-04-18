@@ -61,7 +61,8 @@ static void respawn_particle(int index, int vindex)
   vert[vindex] = randf(-0.1f, 1.1f);
   vert[vindex + 1] = randf(1.0f, 1.1f);
 
-  parts[index].opacity = vert[3 * NUMBER + index] = randf(0.1f, end / ANIMLEN);
+  parts[index].opacity = randf(0.0f, 1.0f);
+  vert[3 * NUMBER + index] = parts[index].opacity * end / ANIMLEN;
 }
 
 int particles_new()
