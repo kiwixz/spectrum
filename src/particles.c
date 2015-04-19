@@ -37,7 +37,8 @@ typedef struct
 
 static const int SIZE = 5,
                  ANIMLEN = 512;
-static const float GOBACK = 0.08f;
+static const float GRAVITY = 1.002f,
+                   GOBACK = 0.01f;
 
 static int      start, end;
 static GLuint   vbo;
@@ -46,18 +47,24 @@ static GLfloat  vert[NUMBER * 4];
 
 static float randf(float min, float max)
 {
-  return rand() * (max - min) / RAND_MAX + min;
+  return (float)rand() / RAND_MAX * (max - min) + min;
 }
 
 static float randrf(float min, float max)
 {
-  return (rand() - RAND_MAX / 2) * (max - min) * 2 / RAND_MAX + min;
+  float f;
+
+  f = ((float)rand() / RAND_MAX * 2 - 1) * (max - min);
+  if (f > 0)
+    return f + min;
+  else
+    return f - min;
 }
 
 static void respawn_particle(int index, int vindex)
 {
-  parts[index].movx = randrf(0.002, 0.01);
-  parts[index].movy = randf(-0.002, -0.01);
+  parts[index].movx = randrf(0.001f, 0.005f);
+  parts[index].movy = randf(-0.002f, -0.005f);
 
   vert[vindex] = randf(-0.1f, 1.1f);
   vert[vindex + 1] = randf(1.0f, 1.1f);
@@ -125,7 +132,9 @@ void particles_render()
 
       iv = i * 3;
       k = spectrum_get_averagevel() + spectrum_get_averagemag() - GOBACK;
-      
+
+      parts[i].movx /= GRAVITY;
+      parts[i].movy *= GRAVITY;
       vert[iv] += parts[i].movx * k;
       vert[iv + 1] += parts[i].movy * k;
 
