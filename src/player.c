@@ -33,6 +33,7 @@
   static const char PATHSEPARATOR = '/';
 #endif
 
+static float      bpm;
 static gint64     position, duration;
 static char       *name;
 static GstElement *pipeline, *source;
@@ -47,6 +48,23 @@ static void end_of_play()
   position = 0;
 }
 
+static void process_tag(const GstTagList *list, const gchar *tag, gpointer nul)
+{
+  const GValue *in;
+
+  if (strcmp(tag, GST_TAG_BEATS_PER_MINUTE))
+    return;
+
+  in = gst_tag_list_get_value_index(list, tag, 0);
+  if (!in)
+    {
+      ERROR("Failed to read BPM tag");
+      return;
+    }
+
+  bpm = g_value_get_double(in);
+}
+
 static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
 {
   switch (GST_MESSAGE_TYPE(msg))
@@ -54,7 +72,8 @@ static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
       case GST_MESSAGE_STREAM_START:
       case GST_MESSAGE_DURATION_CHANGED:
         {
-          if (!gst_element_query_duration(pipeline, GST_FORMAT_TIME, &duration))
+          if (!gst_element_query_duration(pipeline, GST_FORMAT_TIME,
+                                          &duration))
             duration = 0;
 
           break;
@@ -87,6 +106,20 @@ static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
           g_error_free(err);
 
           g_main_loop_quit((GMainLoop *)data);
+          break;
+        }
+
+      case GST_MESSAGE_TAG:
+        {
+          GstTagList *tags;
+
+          gst_message_parse_tag(msg, &tags);
+          if (GST_IS_TAG_LIST(tags))
+            {
+              gst_tag_list_foreach(tags, process_tag, NULL);
+              gst_tag_list_free(tags);
+            }
+
           break;
         }
     }
@@ -141,7 +174,7 @@ static int set_name(const char *file)
 
 int player_new(GMainLoop *loop)
 {
-  GstElement *demuxer, *decoder, *conv, *spec, *sink;
+  GstElement *demuxer, *decoder, *conv, *detector, *spec, *sink;
   GstBus     *bus;
   GstCaps    *caps;
 
@@ -159,13 +192,14 @@ int player_new(GMainLoop *loop)
   demuxer = gst_element_factory_make("qtdemux", NULL);
   decoder = gst_element_factory_make("faad", NULL);
   conv = gst_element_factory_make("audioconvert", NULL);
+  detector = gst_element_factory_make("bpmdetect", NULL);
   spec = gst_element_factory_make("spectrum", NULL);
   caps = gst_caps_new_simple("audio/x-raw", "rate",
                              G_TYPE_INT, AUDIOFREQ, NULL);
   sink = gst_element_factory_make("autoaudiosink", NULL);
 
   if (!pipeline || !source || !demuxer || !decoder
-      || !conv || !spec || !caps || !sink)
+      || !conv || !detector || !spec || !caps || !sink)
     {
       ERROR("Failed to create the audio pipeline");
       return -1;
@@ -180,11 +214,11 @@ int player_new(GMainLoop *loop)
   gst_object_unref(bus);
 
   gst_bin_add_many(GST_BIN(pipeline), source, demuxer, decoder,
-                   conv, spec, sink, NULL);
+                   conv, detector, spec, sink, NULL);
 
   if (!gst_element_link(source, demuxer)
-      || !gst_element_link(decoder, conv)
-      || !gst_element_link_filtered(conv, spec, caps)
+      || !gst_element_link_many(decoder, conv, detector, NULL)
+      || !gst_element_link_filtered(detector, spec, caps)
       || !gst_element_link(spec, sink))
     {
       ERROR("Failed to link the audio pipeline");
