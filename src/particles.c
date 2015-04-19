@@ -37,7 +37,7 @@ typedef struct
 
 static const int SIZE = 5,
                  ANIMLEN = 512;
-static const float GRAVITY = 1.002f,
+static const float GRAVITY = 1.003f,
                    GOBACK = 0.01f;
 
 static int      start, end;
@@ -128,13 +128,18 @@ void particles_render()
   for (i = 0; i < NUMBER; ++i)
     {
       int   iv;
-      float k;
+      float old, k;
 
       iv = i * 3;
       k = spectrum_get_averagevel() + spectrum_get_averagemag() - GOBACK;
 
+      old = parts[i].movx;
       parts[i].movx /= GRAVITY;
-      parts[i].movy *= GRAVITY;
+      if (old > 0)
+        parts[i].movy -= old - parts[i].movx;
+      else
+        parts[i].movy -= parts[i].movx - old;
+
       vert[iv] += parts[i].movx * k;
       vert[iv + 1] += parts[i].movy * k;
 

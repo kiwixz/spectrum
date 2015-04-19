@@ -39,7 +39,7 @@ static GLfloat *vert;
 static GLuint  vbo, vboi;
 
 static void generate_horizontal_quad(int index, float x, float y,
-                          float w, float h, float d)
+                                     float w, float h, float d)
 {
 #define VERTICES(a, b) vert[index + a] = vert[index + b]
 
@@ -55,11 +55,11 @@ static void generate_vertical_quad(int index, float x, float y,
                                    float w, float d)
 {
   VERTICES(0, 3) = x;
-  VERTICES(4, 7) = VERTICES(1,10) = y;
+  VERTICES(4, 7) = VERTICES(1, 10) = y;
   VERTICES(5, 8) = 0.0f;
   VERTICES(6, 9) = x + w;
   VERTICES(2, 11) = d;
-  
+
 #undef VERTICES
 }
 
