@@ -24,7 +24,7 @@
 #include "shared.h"
 #include "textures.h"
 
-static GLuint progs[PROGLEN];
+static GLuint progs[PROGSLEN];
 
 static char *read_file(const char *file)
 {
@@ -105,7 +105,7 @@ static GLuint compile_shader(const char *file, GLuint shader)
 static int create_program(int index, const char *vertf, const char *fragf)
 {
   GLint  done;
-  GLuint prog, vert, frag;
+  GLuint vert, frag;
 
   glCreateShader(GL_FRAGMENT_SHADER);
 
@@ -115,21 +115,21 @@ static int create_program(int index, const char *vertf, const char *fragf)
   if (!vert || !frag)
     return -1;
 
-  prog = glCreateProgram();
-  glAttachShader(prog, vert);
-  glAttachShader(prog, frag);
+  progs[index] = glCreateProgram();
+  glAttachShader(progs[index], vert);
+  glAttachShader(progs[index], frag);
 
-  glBindAttribLocation(prog, POSITION_ATTRIB, "position");
-  glBindAttribLocation(prog, COLOR_ATTRIB,    "color");
-  glBindAttribLocation(prog, TEXCOORD_ATTRIB, "texcoord");
-  glLinkProgram(prog);
+  glBindAttribLocation(progs[index], POSITION_ATTRIB, "position");
+  glBindAttribLocation(progs[index], COLOR_ATTRIB, "color");
+  glBindAttribLocation(progs[index], TEXCOORD_ATTRIB, "texcoord");
 
-  glGetProgramiv(prog, GL_LINK_STATUS, &done);
+  glLinkProgram(progs[index]);
+  glGetProgramiv(progs[index], GL_LINK_STATUS, &done);
   if (!done)
     {
       char *log;
 
-      glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &done);
+      glGetProgramiv(progs[index], GL_INFO_LOG_LENGTH, &done);
       log = malloc(done);
       if (!log)
         {
@@ -137,14 +137,18 @@ static int create_program(int index, const char *vertf, const char *fragf)
           return -1;
         }
 
-      glGetProgramInfoLog(prog, done, &done, log);
+      glGetProgramInfoLog(progs[index], done, &done, log);
       ERROR("Failed to link program (%s + %s):\n%s", vertf, fragf, log);
 
       free(log);
       return -1;
     }
 
-  progs[index] = prog;
+  glDetachShader(progs[index], vert);
+  glDetachShader(progs[index], frag);
+  glDeleteShader(vert);
+  glDeleteShader(frag);
+
   return 0;
 }
 
@@ -166,7 +170,11 @@ int shaders_init()
 
 void shaders_delete()
 {
-  ERROR("shaders_delete isn't implemented yet.");
+  int i;
+
+  shaders_use(PROG_NONE);
+  for (i = 1; i < PROGSLEN; ++i)
+    glDeleteProgram(progs[i]);
 }
 
 void shaders_use(Program prog)

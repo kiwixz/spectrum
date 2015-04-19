@@ -94,7 +94,8 @@ int textures_init()
 
 void textures_delete()
 {
-  ERROR("textures_delete isn't implemented yet");
+  textures_bind(TEX_NONE);
+  glDeleteTextures(TEXTURESLEN - 1, texs + 1);
 }
 
 void textures_bind(Texture tex)

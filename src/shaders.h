@@ -26,7 +26,7 @@
 #define COLOR_ATTRIB 1
 #define TEXCOORD_ATTRIB 2
 
-#define PROGLEN 6
+#define PROGSLEN 6
 typedef enum
 {
   PROG_NONE = 0,
