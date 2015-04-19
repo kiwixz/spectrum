@@ -174,7 +174,7 @@ static int set_name(const char *file)
 
 int player_new(GMainLoop *loop)
 {
-  GstElement *demuxer, *decoder, *conv, *detector, *spec, *sink;
+  GstElement *demuxer, *decoder, *conv, *bpmdetector, *spec, *sink;
   GstBus     *bus;
   GstCaps    *caps;
 
@@ -192,14 +192,14 @@ int player_new(GMainLoop *loop)
   demuxer = gst_element_factory_make("qtdemux", NULL);
   decoder = gst_element_factory_make("faad", NULL);
   conv = gst_element_factory_make("audioconvert", NULL);
-  detector = gst_element_factory_make("bpmdetect", NULL);
+  bpmdetector = gst_element_factory_make("bpmdetect", NULL);
   spec = gst_element_factory_make("spectrum", NULL);
   caps = gst_caps_new_simple("audio/x-raw", "rate",
                              G_TYPE_INT, AUDIOFREQ, NULL);
   sink = gst_element_factory_make("autoaudiosink", NULL);
 
   if (!pipeline || !source || !demuxer || !decoder
-      || !conv || !detector || !spec || !caps || !sink)
+      || !conv || !bpmdetector || !spec || !caps || !sink)
     {
       ERROR("Failed to create the audio pipeline");
       return -1;
@@ -214,11 +214,11 @@ int player_new(GMainLoop *loop)
   gst_object_unref(bus);
 
   gst_bin_add_many(GST_BIN(pipeline), source, demuxer, decoder,
-                   conv, detector, spec, sink, NULL);
+                   conv, bpmdetector, spec, sink, NULL);
 
   if (!gst_element_link(source, demuxer)
-      || !gst_element_link_many(decoder, conv, detector, NULL)
-      || !gst_element_link_filtered(detector, spec, caps)
+      || !gst_element_link_many(decoder, conv, bpmdetector, NULL)
+      || !gst_element_link_filtered(bpmdetector, spec, caps)
       || !gst_element_link(spec, sink))
     {
       ERROR("Failed to link the audio pipeline");
