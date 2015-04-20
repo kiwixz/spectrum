@@ -34,7 +34,7 @@ typedef struct
   Type       type;
 } ConfigEntry;
 
-#define ENTRIESLEN 2
+#define ENTRIESLEN 3
 
 #ifdef _WIN32
   static const char *FILEENVPREFIX = "APPDATA",
@@ -67,6 +67,7 @@ void config_init()
 
   add_entry("window_width", &config.winw, TYPE_INT);
   add_entry("window_height", &config.winh, TYPE_INT);
+  add_entry("volume", &config.vol, TYPE_INT);
 }
 
 static int process_line(const char var[], const char val[])

@@ -19,8 +19,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "timebar.h"
+#include "volbar.h"
 #include "player.h"
+#include "render.h"
 #include "shaders.h"
 #include "shared.h"
 
@@ -28,14 +29,8 @@ static GLuint  vbo, vboi;
 static GLubyte id[6] = {
   0, 1, 2, 2, 3, 0
 };
-static GLfloat vert[4 * 2] = {
-  0.0f, TIMEBARH,
-  0.0f, 0.0f,
-  1.0f, 0.0f,
-  1.0f, TIMEBARH
-};
 
-int timebar_new()
+int volbar_new()
 {
   glGenBuffers(1, &vbo);
   glGenBuffers(1, &vboi);
@@ -46,30 +41,39 @@ int timebar_new()
   return 0;
 }
 
-void timebar_delete()
+void volbar_delete()
 {
   glDeleteBuffers(1, &vbo);
   glDeleteBuffers(1, &vboi);
 }
 
-void timebar_render()
+void volbar_render()
 {
-  float frac;
-
-  frac = player_get_time_frac();
-  if (frac < 0.00001f)
-    return;
-
-  vert[4] = vert[6] = frac;
+  float   x, y, yh;
+  GLfloat vert[4 * 2] = {
+    x = render_itofx(VOLBARXPX), yh = render_itofy(VOLBARYHPX),
+    x, y = render_itofy(VOLBARYPX),
+    VOLBARXW, y,
+    VOLBARXW, yh
+  };
 
   shaders_use(PROG_DIRECT);
-  glVertexAttrib4f(COLOR_ATTRIB, 0.1f, 0.1f, 0.5f, 0.9f);
+  glVertexAttrib4f(COLOR_ATTRIB, 0.5f, 0.1f, 0.1f, 0.2f);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboi);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vert), vert, GL_STREAM_DRAW);
 
   glEnableVertexAttribArray(POSITION_ATTRIB);
+  glVertexAttribPointer(POSITION_ATTRIB, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0);
+
+  vert[4] = vert[6] = x + (VOLBARXW - x)
+    * player_get_volume() / (float)MAXVOL;
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vert), vert, GL_STREAM_DRAW);
+  glVertexAttrib4f(COLOR_ATTRIB, 0.5f, 0.1f, 0.1f, 0.9f);
+
   glVertexAttribPointer(POSITION_ATTRIB, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, 0);

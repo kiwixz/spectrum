@@ -31,23 +31,25 @@
 
 #define FONTW 32 // letters by dimension
 #define FONTH 8
-#define FPSY render_itofy(-16)
-#define FPSW render_itofx(40)
-#define FPSH render_itofy(16)
+#define TIMEY 0.05f
 #define TIMEW 0.2f
 
+static const int FPSYPX = -16,
+                 FPSWPX = 40,
+                 FPSHPX = 16;
 static const float FONTLW = 1.0f / FONTW,
                    FONTLH = 1.0f / FONTH,
                    FPSX = 0.0f,
-                   TIMEX = 0.5f - TIMEW / 2,
-                   TIMEY = 0.05f,
+                   TIMEX = 1.0f - TIMEY - TIMEW,
                    TIMEH = 0.03f,
                    TITLEX = 0.2f,
                    TITLETOPY = 0.275f,
                    TITLEMAXW = 0.7f,
                    TITLEMAXH = 0.15f,
                    TITLEMINLWHRATIO = 0.1f,
-                   TITLEMAXLWHRATIO = 1.0f;
+                   TITLEMAXLWHRATIO = 1.0f,
+                   VOLW = 0.04f,
+                   VOLH = 0.02f;
 static const GLushort VBOID[6] = {
   0, 1, 2, 2, 3, 0
 };
@@ -181,7 +183,7 @@ int texts_render()
   static char fpsstr[64];
   int         sec, len;
   float       w, h, ratio;
-  char        timer[32] = {0};
+  char        buffer[32] = {0};
   const char  *name;
 
   shaders_use(PROG_DIRECTTEX);
@@ -199,7 +201,8 @@ int texts_render()
     }
 
   glVertexAttrib4f(COLOR_ATTRIB, 0.8f, 0.8f, 0.8f, 1.0f);
-  if (render_string(fpsstr, FPSX, FPSY, 0.0f, FPSW, FPSH, 0.0f))
+  if (render_string(fpsstr, FPSX, render_itofy(FPSYPX), 0.0f,
+                    render_itofx(FPSWPX), render_itofy(FPSHPX), 0.0f))
     return -1;
 
   // title
@@ -230,12 +233,18 @@ int texts_render()
     }
 
   // time
-  player_get_time(timer, 32);
-  if (timer[0] != '\0')
-    if (render_string(timer, TIMEX, TIMEY, 0.0f,
+  player_get_time(buffer, sizeof(buffer));
+  if (buffer[0] != '\0')
+    if (render_string(buffer, TIMEX, TIMEY, 0.0f,
                       TIMEW, TIMEH, 0.0f))
       return -1;
 
+
+  // volume
+  snprintf(buffer, sizeof(buffer), "%d %%", player_get_volume());
+  if (render_string(buffer, render_itofx(VOLBARXPX),
+                    render_itofy(VOLBARYHPX), 0.0f, VOLW, VOLH, 0.0f))
+    return -1;
 
   return 0;
 }

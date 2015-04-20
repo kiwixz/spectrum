@@ -30,6 +30,7 @@
 #include "texts.h"
 #include "textures.h"
 #include "timebar.h"
+#include "volbar.h"
 
 static const float   MOTIONBLUR = 0.64f;
 static const GLubyte FBOVBOID[6] = {
@@ -151,7 +152,7 @@ int render_setup(GtkWidget *area)
   if (!done)
     {
       if (bars_new() || buttons_new() || particles_new()
-          || texts_new() || timebar_new())
+          || texts_new() || timebar_new() || volbar_new())
         return -1;
 
       glEnable(GL_CULL_FACE);
@@ -225,6 +226,7 @@ static int render_frame_fbo()
 
   particles_render();
   timebar_render();
+  volbar_render();
   if (texts_render())
     return -1;
 

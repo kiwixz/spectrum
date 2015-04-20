@@ -22,7 +22,7 @@
 
 typedef struct
 {
-  int winw, winh;
+  int winw, winh, vol;
 } Config;
 
 void config_init();

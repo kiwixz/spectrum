@@ -84,10 +84,12 @@ int textures_init()
 
   if (create_texture(TEX_FONT, TEXPATH("font"))
       || create_texture(TEX_FULLSCREEN, TEXPATH("fullscreen"))
+      || create_texture(TEX_MUTE, TEXPATH("mute"))
       || create_texture(TEX_OPEN, TEXPATH("open"))
       || create_texture(TEX_PLAY, TEXPATH("play"))
       || create_texture(TEX_PAUSE, TEXPATH("pause"))
-      || create_texture(TEX_STOP, TEXPATH("stop")))
+      || create_texture(TEX_STOP, TEXPATH("stop"))
+      || create_texture(TEX_UNMUTE, TEXPATH("unmute")))
     return -1;
 
   return 0;

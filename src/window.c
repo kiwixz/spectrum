@@ -104,13 +104,36 @@ static void on_destroy(GtkWidget *widget, gpointer nul)
   g_main_loop_quit(loop);
 }
 
+static int click_bars(int cx, int cy)
+{
+  float x, xw;
+
+  if (cy < TIMEBARH * areah)
+    {
+      player_set_position((float)cx / areaw);
+      return 1;
+    }
+
+  x = VOLBARXPX;
+  xw = VOLBARXW * areaw;
+  if ((cy < VOLBARYHPX) && (cy > VOLBARYPX) && (cx < xw) && (cx > x))
+    {
+      player_set_volume((int)(MAXVOL * (cx - x) / (xw - x)));
+      return 1;
+    }
+
+  return 0;
+}
+
 static gboolean on_motion(GtkWidget *widget,
                           GdkEventButton *event, gpointer nul)
 {
-  if (clicking && (event->y > areah * (1.0f - TIMEBARH)))
+  if (clicking)
     {
-      player_set_position(event->x / areaw);
-      return TRUE;
+      event->y = areah - event->y; // get same orientation as OpenGL
+
+      if (click_bars(event->x, event->y))
+        return TRUE;
     }
 
   return FALSE;
@@ -123,15 +146,10 @@ static gboolean on_press(GtkWidget *widget, GdkEventButton *event,
     return FALSE;
 
   clicking = 1;
+  event->y = areah - event->y; // get same orientation as OpenGL
 
-  if (buttons_click(event->x, areah - event->y))
+  if (buttons_click(event->x, event->y) || click_bars(event->x, event->y))
     return TRUE;
-
-  if (event->y > areah * (1.0f - TIMEBARH))
-    {
-      player_set_position(event->x / areaw);
-      return TRUE;
-    }
 
   return FALSE;
 }
@@ -184,6 +202,10 @@ int window_new(GMainLoop *mainloop)
   Config        *config;
   GtkAccelGroup *accel;
   GdkGLConfig   *glconf;
+  GdkGeometry   geom;
+
+  geom.min_width = 640;
+  geom.min_height = 480;
 
   loop = mainloop;
   config = config_get();
@@ -198,6 +220,8 @@ int window_new(GMainLoop *mainloop)
 
   // window
   gtk_window_set_title(GTK_WINDOW(window), "Spectrum");
+  gtk_window_set_geometry_hints(GTK_WINDOW(window), window,
+                                &geom, GDK_HINT_MIN_SIZE);
   if (config->winw && config->winh)
     gtk_window_set_default_size(GTK_WINDOW(window), config->winw, config->winh);
   else

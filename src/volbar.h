@@ -17,18 +17,12 @@
  * along with spectrum. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BUTTONS_H
-#define BUTTONS_H
+#ifndef VOLBAR_H
+#define VOLBAR_H
 
-int  buttons_new();
-void buttons_delete();
+int  volbar_new();
+void volbar_delete();
 
-void buttons_update();
-void buttons_render();
-
-void buttons_set_isplaying(int b);
-void buttons_set_ismuted(int b);
-
-int buttons_click(int x, int y);
+void volbar_render();
 
 #endif

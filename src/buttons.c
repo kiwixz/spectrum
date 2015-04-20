@@ -29,13 +29,14 @@
 #include "textures.h"
 #include "window.h"
 
-#define BUTTONSLEN 4
+#define BUTTONSLEN 5
 typedef enum
 {
   BUTTON_FULLSCREEN = 0,
-  BUTTON_OPEN = 1,
-  BUTTON_PLAY = 2,
-  BUTTON_STOP = 3
+  BUTTON_MUTE = 1,
+  BUTTON_OPEN = 2,
+  BUTTON_PLAY = 3,
+  BUTTON_STOP = 4
 } Button;
 typedef struct
 {
@@ -93,14 +94,16 @@ int buttons_new()
   glGenBuffers(BUTTONSLEN, &vboi);
   glGenBuffers(BUTTONSLEN, &vbotex);
 
-  generate_button(BUTTON_FULLSCREEN, TEX_FULLSCREEN, 16, 3 * 48,
-                  16 + 32, 3 * 48 + 32);
-  generate_button(BUTTON_OPEN, TEX_OPEN, 16, 2 * 48,
-                  16 + 32, 2 * 48 + 32);
-  generate_button(BUTTON_PLAY, TEX_PLAY, 16, 48,
-                  16 + 32, 48 + 32);
-  generate_button(BUTTON_STOP, TEX_STOP, 16 + 32 + 8, 48,
-                  16 + 32 + 8 + 32, 48 + 32);
+  generate_button(BUTTON_FULLSCREEN, TEX_FULLSCREEN, 16, 3 * 40,
+                  16 + 32, 3 * 40 + 32);
+  generate_button(BUTTON_MUTE, TEX_MUTE, 16 + 2 * (32 + 8) + 16, 40,
+                  16 + 2 * (32 + 8) + 16 + 32, 40 + 32);
+  generate_button(BUTTON_OPEN, TEX_OPEN, 16, 2 * 40,
+                  16 + 32, 2 * 40 + 32);
+  generate_button(BUTTON_PLAY, TEX_PLAY, 16, 40,
+                  16 + 32, 40 + 32);
+  generate_button(BUTTON_STOP, TEX_STOP, 16 + 32 + 8, 40,
+                  16 + 32 + 8 + 32, 40 + 32);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboi);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(VBOID), VBOID, GL_STATIC_DRAW);
@@ -172,13 +175,24 @@ void buttons_set_isplaying(int b)
   infos[BUTTON_PLAY].tex = b ? TEX_PAUSE : TEX_PLAY;
 }
 
-void onclick(Button b)
+void buttons_set_ismuted(int b)
+{
+  infos[BUTTON_MUTE].tex = b ? TEX_UNMUTE : TEX_MUTE;
+}
+
+static void onclick(Button b)
 {
   switch (b)
     {
       case BUTTON_FULLSCREEN:
         {
           window_set_fullscreen(!window_is_fullscreen());
+          break;
+        }
+
+      case BUTTON_MUTE:
+        {
+          player_toggle_mute();
           break;
         }
 

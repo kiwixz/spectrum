@@ -27,10 +27,16 @@
 #define BARSY 0.3f
 #define FPS 60
 #define MAXDB -30
+#define MAXVOL 150
 #define MINDB -80
 #define SMOOTHING 1
 #define SPECBANDS 64
+
 #define TIMEBARH 0.03f
+#define VOLBARXPX 16 + 3 * (32 + 8) + 16
+#define VOLBARYPX 40
+#define VOLBARXW 0.5f
+#define VOLBARYHPX 40 + 16
 
 #define WARNING(s, ...)                                    \
   fprintf(stderr, __FILE__ ":%d: \x1b[33;1m"s "\x1b[0m\n", \

@@ -22,6 +22,7 @@
 #include <string.h>
 #include "player.h"
 #include "buttons.h"
+#include "config.h"
 #include "particles.h"
 #include "shared.h"
 #include "spectrum.h"
@@ -33,10 +34,11 @@
   static const char PATHSEPARATOR = '/';
 #endif
 
+static int        vol, muted;
 static float      bpm;
 static gint64     position, duration;
 static char       *name;
-static GstElement *pipeline, *source;
+static GstElement *pipeline, *source, *volume;
 static GstBus     *bus;
 
 static void process_tag(const GstTagList *list, const gchar *tag, gpointer nul)
@@ -161,6 +163,7 @@ static int set_name(const char *file)
 
 int player_new(GMainLoop *loop)
 {
+  float      configvol;
   GstElement *demuxer, *decoder, *conv, *bpmdetector, *spec, *sink;
   GstCaps    *caps;
 
@@ -180,6 +183,7 @@ int player_new(GMainLoop *loop)
   conv = gst_element_factory_make("audioconvert", NULL);
   bpmdetector = gst_element_factory_make("bpmdetect", NULL);
   spec = gst_element_factory_make("spectrum", NULL);
+  volume = gst_element_factory_make("volume", NULL);
   caps = gst_caps_new_simple("audio/x-raw", "rate",
                              G_TYPE_INT, AUDIOFREQ, NULL);
   sink = gst_element_factory_make("autoaudiosink", NULL);
@@ -195,14 +199,22 @@ int player_new(GMainLoop *loop)
   g_object_set(G_OBJECT(spec), "bands", SPECBANDS,
                "interval", 1000000000L / FPS, "threshold", MINDB, NULL);
 
+  configvol = config_get()->vol;
+  if (configvol)
+    vol = configvol;
+  else
+    vol = 100;
+
+  g_object_set(G_OBJECT(volume), "volume", vol / 100.0f, NULL);
+
   bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
   gst_bin_add_many(GST_BIN(pipeline), source, demuxer, decoder,
-                   conv, bpmdetector, spec, sink, NULL);
+                   conv, bpmdetector, spec, volume, sink, NULL);
 
   if (!gst_element_link(source, demuxer)
       || !gst_element_link_many(decoder, conv, bpmdetector, NULL)
       || !gst_element_link_filtered(bpmdetector, spec, caps)
-      || !gst_element_link(spec, sink))
+      || !gst_element_link_many(spec, volume, sink, NULL))
     {
       ERROR("Failed to link the audio pipeline");
       return -1;
@@ -217,6 +229,8 @@ void player_delete()
   gst_element_set_state(pipeline, GST_STATE_NULL);
   gst_object_unref(bus);
   gst_object_unref(pipeline);
+
+  config_get()->vol = vol;
 
   if (name)
     free(name);
@@ -340,4 +354,30 @@ float player_get_time_frac()
     position = pos;
 
   return (double)position / duration;
+}
+
+void player_toggle_mute()
+{
+  if (muted)
+    {
+      muted = 0;
+      g_object_set(G_OBJECT(volume), "mute", FALSE, NULL);
+    }
+  else
+    {
+      muted = 1;
+      g_object_set(G_OBJECT(volume), "mute", TRUE, NULL);
+    }
+  buttons_set_ismuted(muted);
+}
+
+void player_set_volume(int v)
+{
+  vol = v;
+  g_object_set(G_OBJECT(volume), "volume", v / 100.0f, NULL);
+}
+
+int player_get_volume()
+{
+  return vol;
 }

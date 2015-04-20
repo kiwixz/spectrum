@@ -33,7 +33,7 @@ typedef struct
 #define OUTOFSCREEN(i) \
   OUTOFRANGE(vert[i]) || OUTOFRANGE(vert[i + 1]) || OUTOFRANGE(vert[i + 2])
 
-#define NUMBER 2048
+#define NUMBER 4096
 
 static const int SIZE = 5,
                  ANIMLEN = 512;
@@ -50,6 +50,7 @@ static float randf(float min, float max)
   return (float)rand() / RAND_MAX * (max - min) + min;
 }
 
+#if 0 // could be useful later
 static float randrf(float min, float max)
 {
   float f;
@@ -60,10 +61,11 @@ static float randrf(float min, float max)
   else
     return f - min;
 }
+#endif
 
 static void respawn_particle(int index, int vindex)
 {
-  parts[index].movx = randrf(0.001f, 0.005f);
+  parts[index].movx = randf(-0.005f, 0.005f);
   parts[index].movy = randf(-0.002f, -0.005f);
 
   vert[vindex] = randf(-0.1f, 1.1f);

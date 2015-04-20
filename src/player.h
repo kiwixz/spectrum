@@ -36,4 +36,8 @@ const char *player_get_name();
 void player_get_time(char *time, int maxlen);
 float player_get_time_frac();
 
+void player_toggle_mute();
+void player_set_volume();
+int player_get_volume();
+
 #endif
