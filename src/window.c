@@ -83,9 +83,6 @@ static gboolean on_state_change(GtkWidget *widget,
 {
   fullscreen = event->new_window_state & GDK_WINDOW_STATE_FULLSCREEN;
 
-  printf("%x | %x -> %x\n", event->new_window_state,
-         GDK_WINDOW_STATE_FULLSCREEN, fullscreen);
-
   return FALSE;
 }
 
@@ -133,6 +130,8 @@ static gboolean on_configure(GtkWidget *widget,
 static gboolean redraw(gpointer nul)
 {
   GdkGLDrawable *gldrawable;
+
+  player_bus_pop();
 
   gldrawable = gtk_widget_get_gl_drawable(area);
   if (!gdk_gl_drawable_gl_begin(gldrawable, gtk_widget_get_gl_context(area)))
@@ -202,7 +201,7 @@ int window_new(GMainLoop *mainloop)
       conf = gdk_gl_config_new_by_mode(GDK_GL_MODE_RGB | GDK_GL_MODE_DOUBLE);
       if (!conf)
         ERROR("Could not find any double-buffered capable visual");
-        // try single-buffered (next "if")
+      // try single-buffered (next "if")
     }
   if (!DOUBLEBUFFER || !conf)
     {

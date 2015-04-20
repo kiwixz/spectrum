@@ -25,6 +25,8 @@
 int player_new(GMainLoop *loop);
 void player_delete();
 
+void player_bus_pop();
+
 void player_toggle();
 int player_play_file(const char *file);
 int player_set_position(float frac);

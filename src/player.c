@@ -37,16 +37,7 @@ static float      bpm;
 static gint64     position, duration;
 static char       *name;
 static GstElement *pipeline, *source;
-static guint      buswatch;
-
-static void end_of_play()
-{
-  particles_end();
-  buttons_set_isplaying(0);
-  spectrum_reset();
-
-  position = 0;
-}
+static GstBus     *bus;
 
 static void process_tag(const GstTagList *list, const gchar *tag, gpointer nul)
 {
@@ -65,15 +56,14 @@ static void process_tag(const GstTagList *list, const gchar *tag, gpointer nul)
   bpm = g_value_get_double(in);
 }
 
-static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
+static void process_message(GstMessage *msg)
 {
   switch (GST_MESSAGE_TYPE(msg))
     {
-      case GST_MESSAGE_STREAM_START:
       case GST_MESSAGE_DURATION_CHANGED:
+      case GST_MESSAGE_STREAM_START:
         {
-          if (!gst_element_query_duration(pipeline, GST_FORMAT_TIME,
-                                          &duration))
+          if (!gst_element_query_duration(pipeline, GST_FORMAT_TIME, &duration))
             duration = 0;
 
           break;
@@ -105,7 +95,6 @@ static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
           ERROR("Failed to play: %s", err->message);
           g_error_free(err);
 
-          g_main_loop_quit((GMainLoop *)data);
           break;
         }
 
@@ -123,8 +112,6 @@ static gboolean on_message(GstBus *bus, GstMessage *msg, gpointer data)
           break;
         }
     }
-
-  return TRUE;
 }
 
 // add pad when file is demuxed
@@ -151,10 +138,10 @@ static int set_name(const char *file)
   len = strrchr(file, '.') - from;
 
   free(name);
-  name = malloc((len + 1) * sizeof(char));
+  name = malloc(len + 1);
   if (!name)
     {
-      ERROR("Failed to malloc the %d-long name", len);
+      ERROR("Failed to malloc the %d-long name", len + 1);
       return -1;
     }
 
@@ -175,7 +162,6 @@ static int set_name(const char *file)
 int player_new(GMainLoop *loop)
 {
   GstElement *demuxer, *decoder, *conv, *bpmdetector, *spec, *sink;
-  GstBus     *bus;
   GstCaps    *caps;
 
   name = malloc(sizeof(char));
@@ -210,9 +196,6 @@ int player_new(GMainLoop *loop)
                "interval", 1000000000L / FPS, "threshold", MINDB, NULL);
 
   bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
-  buswatch = gst_bus_add_watch(bus, on_message, loop);
-  gst_object_unref(bus);
-
   gst_bin_add_many(GST_BIN(pipeline), source, demuxer, decoder,
                    conv, bpmdetector, spec, sink, NULL);
 
@@ -232,11 +215,23 @@ int player_new(GMainLoop *loop)
 void player_delete()
 {
   gst_element_set_state(pipeline, GST_STATE_NULL);
-  gst_object_unref(GST_OBJECT(pipeline));
-  g_source_remove(buswatch);
+  gst_object_unref(bus);
+  gst_object_unref(pipeline);
 
   if (name)
     free(name);
+}
+
+void player_bus_pop()
+{
+  while (gst_bus_have_pending(bus))
+    {
+      GstMessage *msg;
+
+      msg = gst_bus_pop(bus);
+      process_message(msg);
+      gst_message_unref(msg);
+    }
 }
 
 void player_toggle()
@@ -281,6 +276,15 @@ int player_set_position(float frac)
     return -1;
 
   return 0;
+}
+
+static void end_of_play()
+{
+  particles_end();
+  buttons_set_isplaying(0);
+  spectrum_reset();
+
+  position = 0;
 }
 
 void player_stop()

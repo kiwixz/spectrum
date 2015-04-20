@@ -34,7 +34,6 @@ void spectrum_reset();
 
 float spectrum_get_averagemag();
 float spectrum_get_averagevel();
-const Spectrum *spectrum_get_and_lock();
-void spectrum_unlock();
+const Spectrum *spectrum_get();
 
 #endif

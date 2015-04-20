@@ -28,7 +28,6 @@ static const float DBRATIO = (1.0f - BARSY) / (MAXDB - MINDB);
 
 static float    averagemag, averagevel;
 static Spectrum *spectrum;
-static GMutex   specmutex;
 
 int spectrum_new()
 {
@@ -74,7 +73,6 @@ void spectrum_parse(const GstStructure *s)
   magnitudes = gst_structure_get_value(s, "magnitude");
   averagemag = averagevel = 0.0f;
 
-  g_mutex_lock(&specmutex);
   for (band = 0; band < SPECBANDS; ++band)
     {
       const GValue *mag;
@@ -91,8 +89,6 @@ void spectrum_parse(const GstStructure *s)
       (spectrum[band - 1].mag * SMOOTHING + spectrum[band].mag * 2
        + spectrum[band + 1].mag * SMOOTHING) / (2 + 2 * SMOOTHING);
 
-  g_mutex_unlock(&specmutex);
-
   averagemag /= SPECBANDS;
   averagevel /= SPECBANDS;
 }
@@ -101,11 +97,8 @@ void spectrum_reset()
 {
   int band;
 
-  g_mutex_lock(&specmutex);
   for (band = 0; band < SPECBANDS; ++band)
     spectrum[band].mag = spectrum[band].vel = 0.0f;
-
-  g_mutex_unlock(&specmutex);
 
   averagemag = 0;
   averagevel = 0;
@@ -121,13 +114,7 @@ float spectrum_get_averagevel()
   return averagevel;
 }
 
-const Spectrum *spectrum_get_and_lock()
+const Spectrum *spectrum_get()
 {
-  g_mutex_lock(&specmutex);
   return spectrum;
-}
-
-void spectrum_unlock()
-{
-  g_mutex_unlock(&specmutex);
 }

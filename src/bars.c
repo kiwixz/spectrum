@@ -179,15 +179,12 @@ void bars_render()
   int            bar;
   const Spectrum *spectrum;
 
-  spectrum = spectrum_get_and_lock();
-
+  spectrum = spectrum_get();
   for (bar = 0; bar < SPECBANDS; ++bar)
     {
       set_bar_h(bar, spectrum[bar].mag);
       set_bar_color(bar, 0.0f, 1.0f, spectrum[bar].mag);
     }
-
-  spectrum_unlock();
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboi);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
