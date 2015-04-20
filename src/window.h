@@ -27,4 +27,7 @@
 
 int window_new(GMainLoop *loop);
 
+int window_is_fullscreen();
+void window_set_fullscreen(int b);
+
 #endif

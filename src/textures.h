@@ -22,15 +22,16 @@
 
 #include <GL/glew.h>
 
-#define TEXTURESLEN 6
+#define TEXTURESLEN 7
 typedef enum
 {
   TEX_NONE = 0,
   TEX_FONT = 1,
-  TEX_OPEN = 2,
-  TEX_PLAY = 3,
-  TEX_PAUSE = 4,
-  TEX_STOP = 5
+  TEX_FULLSCREEN = 2,
+  TEX_OPEN = 3,
+  TEX_PLAY = 4,
+  TEX_PAUSE = 5,
+  TEX_STOP = 6
 } Texture;
 
 int  textures_init();

@@ -83,6 +83,7 @@ int textures_init()
   glGenTextures(TEXTURESLEN - 1, texs + 1);
 
   if (create_texture(TEX_FONT, TEXPATH("font"))
+      || create_texture(TEX_FULLSCREEN, TEXPATH("fullscreen"))
       || create_texture(TEX_OPEN, TEXPATH("open"))
       || create_texture(TEX_PLAY, TEXPATH("play"))
       || create_texture(TEX_PAUSE, TEXPATH("pause"))

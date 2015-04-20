@@ -27,13 +27,15 @@
 #include "shaders.h"
 #include "shared.h"
 #include "textures.h"
+#include "window.h"
 
-#define BUTTONSLEN 3
+#define BUTTONSLEN 4
 typedef enum
 {
-  BUTTON_OPEN = 0,
-  BUTTON_PLAY = 1,
-  BUTTON_STOP = 2
+  BUTTON_FULLSCREEN = 0,
+  BUTTON_OPEN = 1,
+  BUTTON_PLAY = 2,
+  BUTTON_STOP = 3
 } Button;
 typedef struct
 {
@@ -91,8 +93,10 @@ int buttons_new()
   glGenBuffers(BUTTONSLEN, &vboi);
   glGenBuffers(BUTTONSLEN, &vbotex);
 
-  generate_button(BUTTON_OPEN, TEX_OPEN, 16, 96,
-                  16 + 32, 96 + 32);
+  generate_button(BUTTON_FULLSCREEN, TEX_FULLSCREEN, 16, 3 * 48,
+                  16 + 32, 3 * 48 + 32);
+  generate_button(BUTTON_OPEN, TEX_OPEN, 16, 2 * 48,
+                  16 + 32, 2 * 48 + 32);
   generate_button(BUTTON_PLAY, TEX_PLAY, 16, 48,
                   16 + 32, 48 + 32);
   generate_button(BUTTON_STOP, TEX_STOP, 16 + 32 + 8, 48,
@@ -172,6 +176,12 @@ void onclick(Button b)
 {
   switch (b)
     {
+      case BUTTON_FULLSCREEN:
+        {
+          window_set_fullscreen(!window_is_fullscreen());
+          break;
+        }
+
       case BUTTON_OPEN:
         {
           open_audio();
