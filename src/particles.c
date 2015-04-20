@@ -37,7 +37,7 @@ typedef struct
 
 static const int SIZE = 5,
                  ANIMLEN = 512;
-static const float GRAVITY = 1.002f,
+static const float GRAVITY = 1.001f,
                    GOBACK = 0.01f;
 
 static int      start, end;
