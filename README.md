@@ -28,7 +28,3 @@ There is a Makefile so you would compile and run it with only one command:
 ```
 make run
 ```
-
-## Features
-
-- Press `O` to open a file or download the audio from a video from youtube-like sites.
