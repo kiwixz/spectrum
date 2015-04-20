@@ -183,7 +183,7 @@ void bars_render()
   for (bar = 0; bar < SPECBANDS; ++bar)
     {
       set_bar_h(bar, spectrum[bar].mag);
-      set_bar_color(bar, 0.0f, 1.0f, spectrum[bar].mag);
+      set_bar_color(bar, 6 * spectrum[bar].vel, 1.0f, spectrum[bar].mag);
     }
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboi);
