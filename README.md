@@ -6,7 +6,7 @@
 
 This is a simple audio spectrum visualizer written in C using GStreamer. It's only tested on Linux (more precisely Arch Linux).
 
-![Loading screenshot...](https://github.com/kiwixz/spectrum/blob/master/screenshot.png "Screenshot playing an audio file")
+![Loading screenshot...](https://github.com/kiwixz/spectrum/blob/master/screenshot.png "Version of April 20, 2015")
 
 ## What you need
 
