@@ -17,29 +17,19 @@
  * along with spectrum. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SHARED_H
-#define SHARED_H
+#ifndef CONFIG_H
+#define CONFIG_H
 
-// even in shaders: use #VAR
-#define SSAA 2
+typedef struct
+{
+  int winw, winh;
+} Config;
 
-#define AUDIOFREQ 44100
-#define BARSY 0.3f
-#define FPS 60
-#define MAXDB -30
-#define MINDB -80
-#define SMOOTHING 1
-#define SPECBANDS 64
-#define TIMEBARH 0.03f
+void config_init();
 
-#define WARNING(s, ...)                                    \
-  fprintf(stderr, __FILE__ ":%d: \x1b[33;1m"s "\x1b[0m\n", \
-          __LINE__, ## __VA_ARGS__)
-#define ERROR(s, ...)                                      \
-  fprintf(stderr, __FILE__ ":%d: \x1b[31;1m"s "\x1b[0m\n", \
-          __LINE__, ## __VA_ARGS__)
-#define GLERROR()                  \
-  if (glGetError() != GL_NO_ERROR) \
-    ERROR("OpenGL error: %s", gluErrorString(glGetError()))
+int config_read();
+int config_write();
+
+Config *config_get();
 
 #endif

@@ -23,6 +23,7 @@
 #include <gdk/gdkkeysyms.h>
 #include "window.h"
 #include "buttons.h"
+#include "config.h"
 #include "player.h"
 #include "render.h"
 #include "shaders.h"
@@ -31,60 +32,12 @@
 #include "textures.h"
 
 static const int DOUBLEBUFFER = 1,
-                 W = 1280,
-                 H = 720;
+                 DEFAULTW = 1280,
+                 DEFAULTH = 720;
 
 static GtkWidget *window, *area;
 static int       fullscreen, areaw, areah, clicking, motionblur;
 static GMainLoop *loop;
-
-static gboolean on_press(GtkWidget *widget, GdkEventButton *event,
-                         gpointer nul)
-{
-  if (event->type != GDK_BUTTON_PRESS)
-    return FALSE;
-
-  clicking = 1;
-
-  if (buttons_click(event->x, areah - event->y))
-    return TRUE;
-
-  if (event->y > areah * (1.0f - TIMEBARH))
-    {
-      player_set_position(event->x / areaw);
-      return TRUE;
-    }
-
-  return FALSE;
-}
-
-static gboolean on_release(GtkWidget *widget,
-                           GdkEventButton *event, gpointer nul)
-{
-  clicking = 0;
-
-  return FALSE;
-}
-
-static gboolean on_motion(GtkWidget *widget,
-                          GdkEventButton *event, gpointer nul)
-{
-  if (clicking && (event->y > areah * (1.0f - TIMEBARH)))
-    {
-      player_set_position(event->x / areaw);
-      return TRUE;
-    }
-
-  return FALSE;
-}
-
-static gboolean on_state_change(GtkWidget *widget,
-                                GdkEventWindowState *event, gpointer nul)
-{
-  fullscreen = event->new_window_state & GDK_WINDOW_STATE_FULLSCREEN;
-
-  return FALSE;
-}
 
 static gboolean on_configure(GtkWidget *widget,
                              GdkEvent *event, gpointer nul)
@@ -127,6 +80,78 @@ static gboolean on_configure(GtkWidget *widget,
   return TRUE;
 }
 
+static gboolean on_delete(GtkWidget *widget, GdkEvent *event, gpointer nul)
+{
+  Config *config;
+  gint   w, h;
+
+  gtk_window_get_size(GTK_WINDOW(window), &w, &h);
+  config = config_get();
+  config->winw = w;
+  config->winh = h;
+
+  return FALSE;
+}
+
+static void on_destroy(GtkWidget *widget, gpointer nul)
+{
+  player_delete();
+  render_delete();
+  shaders_delete();
+  spectrum_delete();
+  textures_delete();
+
+  g_main_loop_quit(loop);
+}
+
+static gboolean on_motion(GtkWidget *widget,
+                          GdkEventButton *event, gpointer nul)
+{
+  if (clicking && (event->y > areah * (1.0f - TIMEBARH)))
+    {
+      player_set_position(event->x / areaw);
+      return TRUE;
+    }
+
+  return FALSE;
+}
+
+static gboolean on_press(GtkWidget *widget, GdkEventButton *event,
+                         gpointer nul)
+{
+  if (event->type != GDK_BUTTON_PRESS)
+    return FALSE;
+
+  clicking = 1;
+
+  if (buttons_click(event->x, areah - event->y))
+    return TRUE;
+
+  if (event->y > areah * (1.0f - TIMEBARH))
+    {
+      player_set_position(event->x / areaw);
+      return TRUE;
+    }
+
+  return FALSE;
+}
+
+static gboolean on_release(GtkWidget *widget,
+                           GdkEventButton *event, gpointer nul)
+{
+  clicking = 0;
+
+  return FALSE;
+}
+
+static gboolean on_state_change(GtkWidget *widget,
+                                GdkEventWindowState *event, gpointer nul)
+{
+  fullscreen = event->new_window_state & GDK_WINDOW_STATE_FULLSCREEN;
+
+  return FALSE;
+}
+
 static gboolean redraw(gpointer nul)
 {
   GdkGLDrawable *gldrawable;
@@ -154,24 +179,14 @@ static gboolean redraw(gpointer nul)
   return TRUE;
 }
 
-static void on_destroy(GtkWidget *widget, gpointer nul)
-{
-  player_delete();
-  render_delete();
-  shaders_delete();
-  spectrum_delete();
-  textures_delete();
-
-  g_main_loop_quit(loop);
-}
-
 int window_new(GMainLoop *mainloop)
 {
+  Config        *config;
   GtkAccelGroup *accel;
-  GdkGLConfig   *conf;
+  GdkGLConfig   *glconf;
 
-  // global variables
   loop = mainloop;
+  config = config_get();
 
   if (spectrum_new())
     return -1;
@@ -183,9 +198,14 @@ int window_new(GMainLoop *mainloop)
 
   // window
   gtk_window_set_title(GTK_WINDOW(window), "Spectrum");
-  gtk_window_set_default_size(GTK_WINDOW(window), W, H);
+  if (config->winw && config->winh)
+    gtk_window_set_default_size(GTK_WINDOW(window), config->winw, config->winh);
+  else
+    gtk_window_set_default_size(GTK_WINDOW(window), DEFAULTW, DEFAULTH);
+
   g_signal_connect(window, "window-state-event",
                    G_CALLBACK(on_state_change), NULL);
+  g_signal_connect(window, "delete-event", G_CALLBACK(on_delete), NULL);
   g_signal_connect(window, "destroy", G_CALLBACK(on_destroy), NULL);
 
   // accel
@@ -198,22 +218,22 @@ int window_new(GMainLoop *mainloop)
 
   if (DOUBLEBUFFER)
     {
-      conf = gdk_gl_config_new_by_mode(GDK_GL_MODE_RGB | GDK_GL_MODE_DOUBLE);
-      if (!conf)
+      glconf = gdk_gl_config_new_by_mode(GDK_GL_MODE_RGB | GDK_GL_MODE_DOUBLE);
+      if (!glconf)
         ERROR("Could not find any double-buffered capable visual");
       // try single-buffered (next "if")
     }
-  if (!DOUBLEBUFFER || !conf)
+  if (!DOUBLEBUFFER || !glconf)
     {
-      conf = gdk_gl_config_new_by_mode(GDK_GL_MODE_RGB);
-      if (!conf)
+      glconf = gdk_gl_config_new_by_mode(GDK_GL_MODE_RGB);
+      if (!glconf)
         {
           ERROR("Could not find any capable visual");
           return -1;
         }
     }
 
-  if (!gtk_widget_set_gl_capability(area, conf, NULL, TRUE,
+  if (!gtk_widget_set_gl_capability(area, glconf, NULL, TRUE,
                                     GDK_GL_RGBA_TYPE))
     {
       ERROR("Failed to setup OpenGL capabilities");

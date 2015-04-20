@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <glib.h>
 #include <gst/gst.h>
+#include "config.h"
 #include "shaders.h"
 #include "shared.h"
 #include "player.h"
@@ -33,10 +34,10 @@ int main(int argc, char *argv[])
   gtk_init(&argc, &argv);
   gtk_gl_init(&argc, &argv);
   gst_init(&argc, &argv);
+  config_init();
 
   loop = g_main_loop_new(NULL, FALSE);
-
-  if (window_new(loop))
+  if (config_read() < 0 || window_new(loop))
     return EXIT_FAILURE;
 
   if (argc > 2)
@@ -48,6 +49,9 @@ int main(int argc, char *argv[])
 
   // debug
   GLERROR();
+
+  if (config_write())
+    return EXIT_FAILURE;
 
   g_main_loop_unref(loop);
   return EXIT_SUCCESS;
