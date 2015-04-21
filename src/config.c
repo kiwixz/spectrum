@@ -45,6 +45,7 @@ typedef struct
 #endif
 static const int BUFFERSIZE = 512;
 
+static int         varmaxlen;
 static ConfigEntry entries[ENTRIESLEN];
 static char        configfile[1024];
 static Config      config;
@@ -52,6 +53,12 @@ static Config      config;
 static void add_entry(const char *var, void *val, Type type)
 {
   static int i;
+
+  int len;
+
+  len = strlen(var);
+  if (varmaxlen < len)
+    varmaxlen = len;
 
   entries[i].var = var;
   entries[i].val = val;
@@ -65,9 +72,9 @@ void config_init()
   snprintf(configfile, sizeof(configfile), "%s%s",
            getenv(FILEENVPREFIX), FILESUFFIX);
 
+  add_entry("volume", &config.vol, TYPE_INT);
   add_entry("window_width", &config.winw, TYPE_INT);
   add_entry("window_height", &config.winh, TYPE_INT);
-  add_entry("volume", &config.vol, TYPE_INT);
 }
 
 static int process_line(const char var[], const char val[])
@@ -145,9 +152,39 @@ int config_read()
   return 0;
 }
 
+static void write_entry(FILE *fp, int i)
+{
+#define WRITE(s, val) \
+  fprintf(fp, "%-*s = "s "\n", varmaxlen, entries[i].var, val)
+
+  switch (entries[i].type)
+    {
+      case TYPE_INT:
+        {
+          WRITE("%d", *(int *)entries[i].val);
+          break;
+        }
+    }
+
+#undef WRITE
+}
+
 int config_write()
 {
-  printf("w:%d h:%d\n", config.winw, config.winh);
+  int  i;
+  FILE *fp;
+
+  fp = fopen(configfile, "w");
+  if (!fp)
+    {
+      ERROR("Failed to open config file '%s' for writing", configfile);
+      return 1;
+    }
+
+  for (i = 0; i < ENTRIESLEN; ++i)
+    write_entry(fp, i);
+
+  fclose(fp);
 
   return 0;
 }
