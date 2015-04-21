@@ -145,19 +145,22 @@ void bars_delete()
   free(vert);
 }
 
-static void set_bar_h(int bar, GLfloat h)
+static void set_bar_h(int vi, GLfloat h)
 {
-  int i;
-
-  i = 5 * bar * 4 * 3;
   if (h < BARSMINH)
     h = BARSMINH;
 
-  vert[i + 1] = vert[i + 10] // front
-      = vert[i + 13] = vert[i + 16] = vert[i + 19] = vert[i + 22] // up
-                = vert[i + 25] = vert[i + 34] // left
-                      = vert[i + 49] = vert[i + 58] // right
+  vert[vi + 1] = vert[vi + 10] // front
+      = vert[vi + 13] = vert[vi + 16] = vert[vi + 19] = vert[vi + 22] // up
+                = vert[vi + 25] = vert[vi + 34] // left
+                      = vert[vi + 49] = vert[vi + 58] // right
                             = BARSY + h * (1.0f - BARSY);
+}
+
+static void set_bar_z(int vi, GLfloat h)
+{
+  // not yet implemented
+  return;
 }
 
 static void set_bar_color(int bar, GLfloat r, GLfloat g, GLfloat b)
@@ -182,7 +185,12 @@ void bars_render()
   spectrum = spectrum_get();
   for (bar = 0; bar < SPECBANDS; ++bar)
     {
-      set_bar_h(bar, spectrum[bar].mag);
+      int vi;
+
+      vi = 5 * bar * 4 * 3;
+
+      set_bar_h(vi, spectrum[bar].mag);
+      set_bar_z(vi, spectrum[bar].vel);
       set_bar_color(bar, 6 * spectrum[bar].vel, 1.0f, spectrum[bar].mag);
     }
 
