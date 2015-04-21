@@ -33,7 +33,6 @@
 #else
   static const char PATHSEPARATOR = '/';
 #endif
-static const int audiofreq = 44100;
 
 static int        vol, muted;
 static float      bpm;
@@ -119,12 +118,11 @@ static void process_message(GstMessage *msg)
     }
 }
 
-// add pad when file is demuxed
-static void on_pad_added(GstElement *element, GstPad *pad, gpointer data)
+static void on_pad_added(GstElement *decodebin, GstPad *pad, gpointer conv)
 {
   GstPad *sinkpad;
 
-  sinkpad = gst_element_get_static_pad((GstElement *)data, "sink");
+  sinkpad = gst_element_get_static_pad((GstElement *)conv, "sink");
   gst_pad_link(pad, sinkpad);
   gst_object_unref(sinkpad);
 }
@@ -167,7 +165,7 @@ static int set_name(const char *file)
 int player_new(GMainLoop *loop)
 {
   float      configvol;
-  GstElement *demuxer, *decoder, *conv, *spec, *bpmdetector, *sink;
+  GstElement *decodebin, *conv, *spec, *bpmdetector, *sink;
 
   name = malloc(sizeof(char));
   if (!name)
@@ -180,16 +178,15 @@ int player_new(GMainLoop *loop)
   // definitions
   pipeline = gst_pipeline_new("audio-player");
   source = gst_element_factory_make("filesrc", NULL);
-  demuxer = gst_element_factory_make("qtdemux", NULL);
-  decoder = gst_element_factory_make("faad", NULL);
+  decodebin = gst_element_factory_make("decodebin", NULL);
   conv = gst_element_factory_make("audioconvert", NULL);
   spec = gst_element_factory_make("spectrum", NULL);
   bpmdetector = gst_element_factory_make("bpmdetect", NULL);
   volume = gst_element_factory_make("volume", NULL);
   sink = gst_element_factory_make("autoaudiosink", NULL);
 
-  if (!pipeline || !source || !demuxer || !decoder
-      || !conv || !bpmdetector || !spec || !sink)
+  if (!pipeline || !source || !decodebin || !conv
+      || !spec || !bpmdetector || !volume || !sink)
     {
       ERROR("Failed to create the audio pipeline");
       return -1;
@@ -208,17 +205,17 @@ int player_new(GMainLoop *loop)
   g_object_set(G_OBJECT(volume), "volume", vol / 100.0f, NULL);
 
   bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
-  gst_bin_add_many(GST_BIN(pipeline), source, demuxer, decoder,
-                   conv, spec, bpmdetector, volume, sink, NULL);
+  gst_bin_add_many(GST_BIN(pipeline), source, decodebin, conv,
+                   spec, bpmdetector, volume, sink, NULL);
 
-  if (!gst_element_link(source, demuxer)
-      || !gst_element_link_many(decoder, conv, spec, bpmdetector,
+  if (!gst_element_link(source, decodebin)
+      || !gst_element_link_many(conv, spec, bpmdetector,
                                 volume, sink, NULL))
     {
       ERROR("Failed to link the audio pipeline");
       return -1;
     }
-  g_signal_connect(demuxer, "pad-added", G_CALLBACK(on_pad_added), decoder);
+  g_signal_connect(decodebin, "pad-added", G_CALLBACK(on_pad_added), conv);
 
   return 0;
 }

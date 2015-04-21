@@ -10,7 +10,7 @@ This is a simple audio spectrum visualizer written in C using GStreamer. It's on
 
 ## What you need
 
-An usual development environnement (a C compiler, GNU Make, etc) is needed. The Makefile use `c99` as an alias for the compiler. You need youtube-dl to open URLs.
+You need an usual development environnement (a C compiler, GNU Make, etc). The Makefile use `c99` as an alias for the compiler. You need youtube-dl to download audio from URLs.
 
 This program also need some libraries:
 - GLEW
@@ -19,7 +19,7 @@ This program also need some libraries:
 - GStreamer
 - libtiff
 
-Finally, you need an **m4a** audio file or an URL to a video from a youtube-like site.
+Finally, you need an audio file readable by GStreamer, or an URL to a video from a youtube-like site.
 
 ## Compile and Run
 
