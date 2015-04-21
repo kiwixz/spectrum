@@ -35,30 +35,10 @@
 #endif
 
 static int        vol, muted;
-static float      bpm;
 static gint64     position, duration;
 static char       *name;
 static GstElement *pipeline, *source, *volume;
 static GstBus     *bus;
-
-static void process_tag(const GstTagList *list, const gchar *tag, gpointer nul)
-{
-  const GValue *in;
-
-  if (strcmp(tag, GST_TAG_BEATS_PER_MINUTE))
-    return;
-
-  in = gst_tag_list_get_value_index(list, tag, 0);
-  if (!in)
-    {
-      ERROR("Failed to read BPM tag");
-      return;
-    }
-
-  bpm = g_value_get_double(in);
-
-  printf("bpm: %f\n", bpm);
-}
 
 static void process_message(GstMessage *msg)
 {
@@ -98,20 +78,6 @@ static void process_message(GstMessage *msg)
           gst_message_parse_error(msg, &err, NULL);
           ERROR("Failed to play: %s", err->message);
           g_error_free(err);
-
-          break;
-        }
-
-      case GST_MESSAGE_TAG:
-        {
-          GstTagList *tags;
-
-          gst_message_parse_tag(msg, &tags);
-          if (GST_IS_TAG_LIST(tags))
-            {
-              gst_tag_list_foreach(tags, process_tag, NULL);
-              gst_tag_list_free(tags);
-            }
 
           break;
         }
@@ -165,7 +131,7 @@ static int set_name(const char *file)
 int player_new(GMainLoop *loop)
 {
   float      configvol;
-  GstElement *decodebin, *conv, *spec, *bpmdetector, *sink;
+  GstElement *decodebin, *conv, *spec, *sink;
 
   name = malloc(sizeof(char));
   if (!name)
@@ -181,12 +147,11 @@ int player_new(GMainLoop *loop)
   decodebin = gst_element_factory_make("decodebin", NULL);
   conv = gst_element_factory_make("audioconvert", NULL);
   spec = gst_element_factory_make("spectrum", NULL);
-  bpmdetector = gst_element_factory_make("bpmdetect", NULL);
   volume = gst_element_factory_make("volume", NULL);
   sink = gst_element_factory_make("autoaudiosink", NULL);
 
-  if (!pipeline || !source || !decodebin || !conv
-      || !spec || !bpmdetector || !volume || !sink)
+  if (!pipeline || !source || !decodebin
+      || !conv || !spec || !volume || !sink)
     {
       ERROR("Failed to create the audio pipeline");
       return -1;
@@ -205,12 +170,11 @@ int player_new(GMainLoop *loop)
   g_object_set(G_OBJECT(volume), "volume", vol / 100.0f, NULL);
 
   bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
-  gst_bin_add_many(GST_BIN(pipeline), source, decodebin, conv,
-                   spec, bpmdetector, volume, sink, NULL);
+  gst_bin_add_many(GST_BIN(pipeline), source, decodebin,
+                   conv, spec, volume, sink, NULL);
 
   if (!gst_element_link(source, decodebin)
-      || !gst_element_link_many(conv, spec, bpmdetector,
-                                volume, sink, NULL))
+      || !gst_element_link_many(conv, spec, volume, sink, NULL))
     {
       ERROR("Failed to link the audio pipeline");
       return -1;
