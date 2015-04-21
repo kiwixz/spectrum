@@ -23,7 +23,6 @@
 // even in shaders: use #VAR
 #define SSAA 2
 
-#define AUDIOFREQ 44100
 #define BARSY 0.3f
 #define FPS 60
 #define MAXDB -30
