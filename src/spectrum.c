@@ -22,8 +22,11 @@
 #include "spectrum.h"
 #include "shared.h"
 
-static const int KUP = 2,
-                 KDOWN = 8;
+#define MAXDB -30
+
+static const int KUP = 0.0333333f * FPS,
+                 KDOWN = 0.1333333f * FPS;
+
 static const float DBRATIO = (1.0f - BARSY) / (MAXDB - MINDB);
 
 static float    averagemag, averagevel;
@@ -34,7 +37,7 @@ int spectrum_new()
   spectrum = calloc(SPECBANDS, sizeof(Spectrum));
   if (!spectrum)
     {
-      ERROR("Failed to malloc spectrum");
+      ERROR("Failed to calloc spectrum");
       return -1;
     }
 

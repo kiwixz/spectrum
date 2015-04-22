@@ -25,7 +25,6 @@
 
 #define BARSY 0.3f
 #define FPS 120
-#define MAXDB -30
 #define MAXVOL 150
 #define MINDB -80
 #define SMOOTHING 1
