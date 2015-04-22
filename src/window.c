@@ -118,7 +118,7 @@ static int click_bars(int cx, int cy)
   xw = VOLBARXW * areaw;
   if ((cy < VOLBARYHPX) && (cy > VOLBARYPX) && (cx < xw) && (cx > x))
     {
-      player_set_volume((int)(MAXVOL * (cx - x) / (xw - x)));
+      player_set_volume((int)(MAXVOL * (cx - x) / (xw - x)) + 1);
       return 1;
     }
 
