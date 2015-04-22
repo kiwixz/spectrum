@@ -196,6 +196,7 @@ void bars_render()
       set_bar_color(bar, 6 * spectrum[bar].vel, 1.0f, spectrum[bar].mag);
     }
 
+  shaders_use(PROG_DIRECT);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboi);
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER,

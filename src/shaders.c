@@ -60,9 +60,9 @@ static char *read_shader(const char *file)
   if (!buffer)
     return NULL;
 
-  pos = strstr(buffer, "#SSAA");
+  pos = strstr(buffer, "# SSAA");
   if (pos)
-    pos[sprintf(pos, "%4d", SSAA)] = ' ';
+    pos[sprintf(pos, "%5d", SSAA)] = ' ';
 
   return buffer;
 }
@@ -122,6 +122,7 @@ static int create_program(int index, const char *vertf, const char *fragf)
   glBindAttribLocation(progs[index], POSITION_ATTRIB, "position");
   glBindAttribLocation(progs[index], COLOR_ATTRIB, "color");
   glBindAttribLocation(progs[index], TEXCOORD_ATTRIB, "texcoord");
+  glBindAttribLocation(progs[index], PTSIZE_ATTRIB, "ptsize");
 
   glLinkProgram(progs[index]);
   glGetProgramiv(progs[index], GL_LINK_STATUS, &done);
@@ -155,8 +156,10 @@ static int create_program(int index, const char *vertf, const char *fragf)
 int shaders_init()
 {
   if (create_program(PROG_BARS, "shaders/pass.vert", "shaders/bars.frag")
-      || create_program(PROG_DIRECT, "shaders/direct.vert",
-                        "shaders/direct.frag")
+      || create_program(PROG_DIRECT,
+                        "shaders/direct.vert", "shaders/direct.frag")
+      || create_program(PROG_DIRECTPT,
+                        "shaders/directpt.vert", "shaders/direct.frag")
       || (create_program(PROG_DIRECTTEX,
                          "shaders/directtex.vert", "shaders/directtex.frag"))
       || (create_program(PROG_PARTICLES,
@@ -188,6 +191,9 @@ void shaders_set_uniforms(GLfloat *matrix)
 
   shaders_use(PROG_DIRECT);
   shaders_send_matrix(PROG_DIRECT, matrix);
+
+  shaders_use(PROG_DIRECTPT);
+  shaders_send_matrix(PROG_DIRECTPT, matrix);
 
   shaders_use(PROG_DIRECTTEX);
   shaders_send_matrix(PROG_DIRECTTEX, matrix);

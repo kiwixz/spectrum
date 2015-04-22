@@ -19,7 +19,7 @@
 
 #version 450
 
-in vec4  position;
+in vec3  position;
 in vec4  color;
 in vec2  texcoord;
 out vec4 vf_color;
@@ -31,5 +31,5 @@ void main()
 {
   vf_color = color;
   vf_texcoord = texcoord;
-  gl_Position = matrix * position;
+  gl_Position = matrix * vec4(position, 1.0f);
 }

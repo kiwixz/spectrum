@@ -19,7 +19,7 @@
 
 #version 450
 
-const uniform int   ssaa = #SSAA;
+const uniform int   ssaa = # SSAA;
 const uniform float blur[8] = {
   0.0500000f,
   0.0191406f,

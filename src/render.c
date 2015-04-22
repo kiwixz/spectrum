@@ -155,8 +155,10 @@ int render_setup(GtkWidget *area)
           || texts_new() || timebar_new() || volbar_new())
         return -1;
 
-      glEnable(GL_CULL_FACE);
       glEnable(GL_BLEND);
+      glEnable(GL_CULL_FACE);
+      glEnable(GL_POINT_SMOOTH);
+
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
       done = 1;
@@ -196,7 +198,6 @@ static void render_static_vbo()
 
 static void render_two_passes(void (*func)(), Program p)
 {
-  shaders_use(PROG_DIRECT);
   glBindFramebuffer(GL_FRAMEBUFFER, fbos[0]);
   glClear(GL_COLOR_BUFFER_BIT);
 

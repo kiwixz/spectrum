@@ -21,6 +21,7 @@
 
 in vec3  position;
 in vec4  color;
+in float ptsize;
 out vec4 vf_color;
 
 uniform mat4 matrix;
@@ -29,4 +30,5 @@ void main()
 {
   vf_color = color;
   gl_Position = matrix * vec4(position, 1.0f);
+  gl_PointSize = ptsize;
 }

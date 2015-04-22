@@ -25,16 +25,18 @@
 #define POSITION_ATTRIB 0
 #define COLOR_ATTRIB 1
 #define TEXCOORD_ATTRIB 2
+#define PTSIZE_ATTRIB 3
 
-#define PROGSLEN 6
+#define PROGSLEN 7
 typedef enum
 {
   PROG_NONE = 0,
   PROG_BARS = 1,
   PROG_DIRECT = 2,
-  PROG_DIRECTTEX = 3,
-  PROG_PARTICLES = 4,
-  PROG_PASS = 5
+  PROG_DIRECTPT = 3,
+  PROG_DIRECTTEX = 4,
+  PROG_PARTICLES = 5,
+  PROG_PASS = 6
 } Program;
 
 int  shaders_init();
