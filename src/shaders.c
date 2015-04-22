@@ -154,15 +154,14 @@ static int create_program(int index, const char *vertf, const char *fragf)
 
 int shaders_init()
 {
-  if (create_program(PROG_DIRECT, "shaders/direct.vert", "shaders/direct.frag")
-      || (create_program(PROG_PARTICLES,
-                         "shaders/particles.vert", "shaders/particles.frag"))
+  if (create_program(PROG_BARS, "shaders/pass.vert", "shaders/bars.frag")
+      || create_program(PROG_DIRECT, "shaders/direct.vert",
+                        "shaders/direct.frag")
       || (create_program(PROG_DIRECTTEX,
                          "shaders/directtex.vert", "shaders/directtex.frag"))
-      || (create_program(PROG_PASS,
-                         "shaders/pass.vert", "shaders/pass.frag"))
-      || (create_program(PROG_BARSTWO,
-                         "shaders/pass.vert", "shaders/barstwo.frag")))
+      || (create_program(PROG_PARTICLES,
+                         "shaders/pass.vert", "shaders/particles.frag"))
+      || (create_program(PROG_PASS, "shaders/pass.vert", "shaders/pass.frag")))
     return -1;
 
   return 0;
@@ -184,21 +183,21 @@ void shaders_use(Program prog)
 
 void shaders_set_uniforms(GLfloat *matrix)
 {
+  shaders_use(PROG_BARS);
+  shaders_set_texture(PROG_BARS, 0);
+
   shaders_use(PROG_DIRECT);
   shaders_send_matrix(PROG_DIRECT, matrix);
-
-  shaders_use(PROG_PARTICLES);
-  shaders_send_matrix(PROG_PARTICLES, matrix);
 
   shaders_use(PROG_DIRECTTEX);
   shaders_send_matrix(PROG_DIRECTTEX, matrix);
   shaders_set_texture(PROG_DIRECTTEX, 0);
 
+  shaders_use(PROG_PARTICLES);
+  shaders_set_texture(PROG_PARTICLES, 0);
+
   shaders_use(PROG_PASS);
   shaders_set_texture(PROG_PASS, 0);
-
-  shaders_use(PROG_BARSTWO);
-  shaders_set_texture(PROG_BARSTWO, 0);
 }
 
 void shaders_send_matrix(Program prog, GLfloat *matrix)

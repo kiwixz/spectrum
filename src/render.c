@@ -194,43 +194,39 @@ static void render_static_vbo()
   glDisableVertexAttribArray(TEXCOORD_ATTRIB);
 }
 
-static void render_passtwo()
+static void render_two_passes(void (*func)(), Program p)
 {
+  shaders_use(PROG_DIRECT);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbos[0]);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  (*func)();
+
+  shaders_use(p);
   glBindTexture(GL_TEXTURE_2D, fbostex[0]);
   glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]);
   glBindBuffer(GL_ARRAY_BUFFER, fbovbo);
+
   render_static_vbo();
-}
-
-static void render_bars()
-{
-  glBindFramebuffer(GL_FRAMEBUFFER, fbos[0]);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  shaders_use(PROG_DIRECT);
-
-  bars_render();
-
-  shaders_use(PROG_BARSTWO);
-  render_passtwo();
 }
 
 static int render_frame_fbo()
 {
   glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]);
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT);
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
   // ssaa
   glViewport(0, 0, ssaaw, ssaah);
 
-  particles_render();
+  render_two_passes(&particles_render, PROG_PARTICLES);
   timebar_render();
   volbar_render();
   if (texts_render())
     return -1;
 
-  render_bars();
+  render_two_passes(&bars_render, PROG_BARS);
   buttons_render();
 
   glViewport(0, 0, areaw, areah);
@@ -243,9 +239,9 @@ int render(int motionblur)
   if (render_frame_fbo())
     return -1;
 
+  shaders_use(PROG_PASS);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glBindTexture(GL_TEXTURE_2D, fbostex[1]);
-  shaders_use(PROG_PASS);
   glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f,
                    motionblur ? 1.0f - MOTIONBLUR : 1.0f);
 

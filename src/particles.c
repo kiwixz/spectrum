@@ -33,7 +33,7 @@ typedef struct
 #define OUTOFSCREEN(i) \
   OUTOFRANGE(vert[i]) || OUTOFRANGE(vert[i + 1]) || OUTOFRANGE(vert[i + 2])
 
-#define NUMBER 4096
+#define NUMBER 2048
 
 static const int SIZE = 5,
                  ANIMLEN = 512;
@@ -43,7 +43,7 @@ static const float GRAVITY = 1.001f,
 static int      start, end;
 static GLuint   vbo;
 static Particle parts[NUMBER];
-static GLfloat  vert[NUMBER * 4];
+static GLfloat  vert[NUMBER * (3 + 4)];
 
 static float randf(float min, float max)
 {
@@ -51,16 +51,17 @@ static float randf(float min, float max)
 }
 
 #if 0 // could be useful later
-static float randrf(float min, float max)
-{
-  float f;
+  static float randrf(float min, float max)
+  {
+    float f;
 
-  f = ((float)rand() / RAND_MAX * 2 - 1) * (max - min);
-  if (f > 0)
-    return f + min;
-  else
-    return f - min;
-}
+    f = ((float)rand() / RAND_MAX * 2 - 1) * (max - min);
+    if (f > 0)
+      return f + min;
+    else
+      return f - min;
+  }
+
 #endif
 
 static void respawn_particle(int index, int vindex)
@@ -72,7 +73,7 @@ static void respawn_particle(int index, int vindex)
   vert[vindex + 1] = randf(1.0f, 1.1f);
 
   parts[index].opacity = randf(0.0f, 1.0f);
-  vert[3 * NUMBER + index] = parts[index].opacity * end / ANIMLEN;
+  vert[3 * NUMBER + index * 4 + 3] = parts[index].opacity * end / ANIMLEN;
 }
 
 int particles_new()
@@ -91,7 +92,9 @@ int particles_new()
       respawn_particle(i, iv);
 
       vert[iv + 1] = randf(0.0f, 1.1f);
-      vert[3 * NUMBER + i] = 0.0f;
+      vert[3 * NUMBER + i * 4] = vert[3 * NUMBER + i * 4 + 1]
+          = vert[3 * NUMBER + i * 4 + 2] = 1.0f;
+      vert[3 * NUMBER + i * 4 + 3] = 0.0f;
     }
   end = 0;
 
@@ -107,12 +110,12 @@ void particles_render()
 {
   int i;
 
-  if (end == -1)
+  if (end < 0)
     return;
   else if (start)
     {
       for (i = 0; i < NUMBER; ++i)
-        vert[3 * NUMBER + i] += parts[i].opacity / ANIMLEN;
+        vert[3 * NUMBER + i * 4 + 3] += parts[i].opacity / ANIMLEN;
 
       --start;
       ++end;
@@ -120,12 +123,10 @@ void particles_render()
   else if (end < ANIMLEN)
     {
       for (i = 0; i < NUMBER; ++i)
-        vert[3 * NUMBER + i] -= parts[i].opacity / ANIMLEN;
+        vert[3 * NUMBER + i * 4 + 3] -= parts[i].opacity / ANIMLEN;
 
       --end;
     }
-
-  shaders_use(PROG_PARTICLES);
 
   for (i = 0; i < NUMBER; ++i)
     {
@@ -150,13 +151,13 @@ void particles_render()
     }
 
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, (3 + 1) * NUMBER * sizeof(GLfloat),
+  glBufferData(GL_ARRAY_BUFFER, (3 + 4) * NUMBER * sizeof(GLfloat),
                vert, GL_STREAM_DRAW);
 
   glEnableVertexAttribArray(POSITION_ATTRIB);
   glEnableVertexAttribArray(COLOR_ATTRIB);
   glVertexAttribPointer(POSITION_ATTRIB, 3, GL_FLOAT, GL_FALSE, 0, 0);
-  glVertexAttribPointer(COLOR_ATTRIB, 1, GL_FLOAT, GL_FALSE,
+  glVertexAttribPointer(COLOR_ATTRIB, 4, GL_FLOAT, GL_FALSE,
                         0, (GLvoid *)(3 * NUMBER * sizeof(GLfloat)));
 
   glDrawArrays(GL_POINTS, 0, NUMBER);

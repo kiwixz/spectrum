@@ -30,11 +30,11 @@
 typedef enum
 {
   PROG_NONE = 0,
-  PROG_DIRECT = 1,
-  PROG_PARTICLES = 2,
+  PROG_BARS = 1,
+  PROG_DIRECT = 2,
   PROG_DIRECTTEX = 3,
-  PROG_PASS = 4,
-  PROG_BARSTWO = 5
+  PROG_PARTICLES = 4,
+  PROG_PASS = 5
 } Program;
 
 int  shaders_init();
