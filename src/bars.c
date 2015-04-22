@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "bars.h"
+#include "player.h"
 #include "shaders.h"
 #include "shared.h"
 #include "spectrum.h"
@@ -160,7 +161,6 @@ static void set_bar_h(int vi, GLfloat h)
 static void set_bar_z(int vi, GLfloat h)
 {
   // not yet implemented
-  return;
 }
 
 static void set_bar_color(int bar, GLfloat r, GLfloat g, GLfloat b)
@@ -181,6 +181,8 @@ void bars_render()
 {
   int            bar;
   const Spectrum *spectrum;
+
+  player_bus_pop();
 
   spectrum = spectrum_get();
   for (bar = 0; bar < SPECBANDS; ++bar)
