@@ -45,7 +45,7 @@ typedef struct
   float   rgb;
 } ButtonInfo;
 
-static const float   ILLUMINATION_DECAY = 0.05f;
+static const float   ILLUMINATION_DECAY = 3 / (float)FPS;
 static const GLubyte VBOID[6] = {
   0, 1, 2, 2, 3, 0
 };

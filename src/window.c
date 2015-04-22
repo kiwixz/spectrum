@@ -31,7 +31,7 @@
 #include "spectrum.h"
 #include "textures.h"
 
-static const int DOUBLEBUFFER = 1,
+static const int DOUBLEBUFFER = 0,
                  DEFAULTW = 1280,
                  DEFAULTH = 720;
 

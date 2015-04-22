@@ -32,7 +32,7 @@
 #include "timebar.h"
 #include "volbar.h"
 
-static const float   MOTIONBLUR = 0.64f;
+static const float   MOTIONBLEND = 40 / (float)FPS;
 static const GLubyte FBOVBOID[6] = {
   0, 1, 2, 2, 3, 0
 };
@@ -243,7 +243,7 @@ int render(int motionblur)
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glBindTexture(GL_TEXTURE_2D, fbostex[1]);
   glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f,
-                   motionblur ? 1.0f - MOTIONBLUR : 1.0f);
+                   motionblur ? MOTIONBLEND : 1.0f);
 
   render_static_vbo();
 

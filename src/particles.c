@@ -36,7 +36,7 @@ typedef struct
 #define NUMBER 2048
 
 static const int SIZE = 5,
-                 ANIMLEN = 512;
+                 ANIMLEN = 8 * FPS;
 static const float GRAVITY = 1.001f,
                    GOBACK = 0.01f;
 
@@ -66,8 +66,8 @@ static float randf(float min, float max)
 
 static void respawn_particle(int index, int vindex)
 {
-  parts[index].movx = randf(-0.005f, 0.005f);
-  parts[index].movy = randf(-0.002f, -0.005f);
+  parts[index].movx = randf(-0.3f / FPS, 0.3f / FPS);
+  parts[index].movy = randf(-0.15f / FPS, -0.3f / FPS);
 
   vert[vindex] = randf(-0.1f, 1.1f);
   vert[vindex + 1] = randf(1.0f, 1.1f);
