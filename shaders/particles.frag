@@ -20,11 +20,15 @@
 #version 450
 
 const uniform int   ssaa = #SSAA;
-const uniform float blur[4] = {
-  1.0144928f,
-  0.0811594f,
-  0.0405797f,
-  0.0202899f
+const uniform float blur[8] = {
+  1.0000000f,
+  0.0500000f,
+  0.0125000f,
+  0.0031250f,
+  0.0007813f,
+  0.0001953f,
+  0.0000488f,
+  0.0000122f
 };
 
 const int blurmid = blur.length() / 2;
