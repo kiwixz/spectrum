@@ -22,6 +22,7 @@
 
 typedef struct
 {
+  int eqbands[10];
   int winw, winh, vol;
 } Config;
 

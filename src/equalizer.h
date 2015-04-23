@@ -17,30 +17,9 @@
  * along with spectrum. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PLAYER_H
-#define PLAYER_H
+#ifndef EQUALIZER_H
+#define EQUALIZER_H
 
-#include <gst/gst.h>
-
-int player_new(GMainLoop *loop);
-void player_delete();
-
-void player_bus_pop();
-void player_set_fps(int fps);
-
-void player_toggle();
-int player_play_file(const char *file);
-int player_set_position(float frac);
-void player_stop();
-
-const char *player_get_name();
-void player_get_time(char *time, int maxlen);
-float player_get_time_frac();
-
-void player_toggle_mute();
-void player_set_volume();
-int player_get_volume();
-
-void player_refresh_equalizer();
+void equalizer_show();
 
 #endif

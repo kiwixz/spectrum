@@ -39,7 +39,7 @@ static const char DOWNLOADER[] =
 
 static GtkWidget *window;
 
-static void on_destroy()
+static void on_destroy(GtkWidget *widget, gpointer nul)
 {
   window = NULL;
 }

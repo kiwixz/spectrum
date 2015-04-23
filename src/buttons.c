@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "buttons.h"
+#include "equalizer.h"
 #include "open.h"
 #include "player.h"
 #include "render.h"
@@ -29,14 +30,15 @@
 #include "textures.h"
 #include "window.h"
 
-#define BUTTONSLEN 5
+#define BUTTONSLEN 6
 typedef enum
 {
   BUTTON_FULLSCREEN = 0,
-  BUTTON_MUTE = 1,
-  BUTTON_OPEN = 2,
-  BUTTON_PLAY = 3,
-  BUTTON_STOP = 4
+  BUTTON_EQUALIZER = 1,
+  BUTTON_MUTE = 2,
+  BUTTON_OPEN = 3,
+  BUTTON_PLAY = 4,
+  BUTTON_STOP = 5
 } Button;
 typedef struct
 {
@@ -75,17 +77,12 @@ static void generate_quad(GLfloat *vert,
 static void generate_button(Button b, Texture tex,
                             int x, int y, int xw, int yh)
 {
-#define COPY(v) infos[b].v = v;
-
-  COPY(tex);
-  COPY(x);
-  COPY(y);
-  COPY(xw);
-  COPY(yh);
-
+  infos[b].tex = tex;
+  infos[b].x = x;
+  infos[b].y = y;
+  infos[b].xw = xw;
+  infos[b].yh = yh;
   infos[b].rgb = 1.0f;
-
-#undef COPY
 }
 
 int buttons_new()
@@ -94,6 +91,9 @@ int buttons_new()
   glGenBuffers(BUTTONSLEN, &vboi);
   glGenBuffers(BUTTONSLEN, &vbotex);
 
+  generate_button(BUTTON_EQUALIZER, TEX_EQUALIZER,
+                  16 + 2 * (32 + 8) + 16, 2 * 40,
+                  16 + 2 * (32 + 8) + 16 + 32, 2 * 40 + 32);
   generate_button(BUTTON_FULLSCREEN, TEX_FULLSCREEN, 16, 3 * 40,
                   16 + 32, 3 * 40 + 32);
   generate_button(BUTTON_MUTE, TEX_MUTE, 16 + 2 * (32 + 8) + 16, 40,
@@ -184,6 +184,12 @@ static void onclick(Button b)
 {
   switch (b)
     {
+      case BUTTON_EQUALIZER:
+        {
+          equalizer_show();
+          break;
+        }
+
       case BUTTON_FULLSCREEN:
         {
           window_set_fullscreen(!window_is_fullscreen());

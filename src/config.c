@@ -25,16 +25,18 @@
 
 typedef enum
 {
-  TYPE_INT
+  TYPE_INT,
+  TYPE_INT_ARRAY
 } Type;
 typedef struct
 {
   const char *var;
   void       *val;
+  int        size;
   Type       type;
 } ConfigEntry;
 
-#define ENTRIESLEN 3
+#define ENTRIESLEN 4
 
 #ifdef _WIN32
   static const char *FILEENVPREFIX = "APPDATA",
@@ -43,14 +45,14 @@ typedef struct
   static const char *FILEENVPREFIX = "HOME",
                     *FILESUFFIX = "/.config/spectrum.conf";
 #endif
-static const int BUFFERSIZE = 512;
+static const int BUFFERSIZE = 1024;
 
 static int         varmaxlen;
 static ConfigEntry entries[ENTRIESLEN];
 static char        configfile[1024];
 static Config      config;
 
-static void add_entry(const char *var, void *val, Type type)
+static void add_entry(const char *var, void *val, int size, Type type)
 {
   static int i;
 
@@ -62,6 +64,7 @@ static void add_entry(const char *var, void *val, Type type)
 
   entries[i].var = var;
   entries[i].val = val;
+  entries[i].size = size;
   entries[i].type = type;
 
   ++i;
@@ -72,12 +75,13 @@ void config_init()
   snprintf(configfile, sizeof(configfile), "%s%s",
            getenv(FILEENVPREFIX), FILESUFFIX);
 
-  add_entry("volume", &config.vol, TYPE_INT);
-  add_entry("window_width", &config.winw, TYPE_INT);
-  add_entry("window_height", &config.winh, TYPE_INT);
+  add_entry("equalizer_bands", &config.eqbands, 10, TYPE_INT_ARRAY);
+  add_entry("volume", &config.vol, 0, TYPE_INT);
+  add_entry("window_width", &config.winw, 0, TYPE_INT);
+  add_entry("window_height", &config.winh, 0, TYPE_INT);
 }
 
-static int process_line(const char var[], const char val[])
+static int process_line(const char var[], char val[])
 {
   int i;
 
@@ -88,6 +92,22 @@ static int process_line(const char var[], const char val[])
           case TYPE_INT:
             {
               *(int *)entries[i].val = atoi(val);
+              break;
+            }
+
+          case TYPE_INT_ARRAY:
+            {
+              int  j, *intval;
+              char *str;
+
+              intval = (int *)entries[i].val;
+              str = strtok(val, ",");
+              for (j = 0; str && j < entries[i].size; ++j)
+                {
+                  intval[j] = atoi(str);
+                  str = strtok(NULL, ",");
+                }
+
               break;
             }
         }
@@ -162,6 +182,27 @@ static void write_entry(FILE *fp, int i)
       case TYPE_INT:
         {
           WRITE("%d", *(int *)entries[i].val);
+          break;
+        }
+
+      case TYPE_INT_ARRAY:
+        {
+          int j, *intval;
+          char val[BUFFERSIZE], *vali;
+
+          intval = (int *)entries[i].val;
+          vali = val + sprintf(val, "%d", intval[0]);
+          for (j = 1; j < entries[i].size; ++j)
+            vali += sprintf(vali, ", %d", intval[j]);
+
+          if (vali - val > BUFFERSIZE)
+            {
+              ERROR("Buffer overflow (%d > %d) !",
+                    (int)(vali - val), BUFFERSIZE);
+              return;
+            }
+
+          WRITE("%s", val);
           break;
         }
     }

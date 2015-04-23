@@ -37,7 +37,7 @@
 static int        vol, muted;
 static gint64     position, duration;
 static char       *name;
-static GstElement *pipeline, *source, *spec, *volume;
+static GstElement *pipeline, *source, *equalizer, *spec, *volume;
 static GstBus     *bus;
 
 static void process_message(GstMessage *msg)
@@ -146,19 +146,21 @@ int player_new(GMainLoop *loop)
   source = gst_element_factory_make("filesrc", NULL);
   decodebin = gst_element_factory_make("decodebin", NULL);
   conv = gst_element_factory_make("audioconvert", NULL);
+    equalizer = gst_element_factory_make("equalizer-10bands", NULL);
   spec = gst_element_factory_make("spectrum", NULL);
   volume = gst_element_factory_make("volume", NULL);
   sink = gst_element_factory_make("autoaudiosink", NULL);
 
-  if (!pipeline || !source || !decodebin
-      || !conv || !spec || !volume || !sink)
+  if (!pipeline || !source || !decodebin || !conv
+      || !spec || !volume || !equalizer || !sink)
     {
       ERROR("Failed to create the audio pipeline");
       return -1;
     }
 
   // properties
-  g_object_set(G_OBJECT(spec), "bands", SPECBANDS, "threshold", MINDB, NULL);
+  g_object_set(G_OBJECT(spec), "bands", (guint)SPECBANDS,
+               "threshold", (gint)MINDB, NULL);
 
   configvol = config_get()->vol;
   if (configvol)
@@ -166,14 +168,15 @@ int player_new(GMainLoop *loop)
   else
     vol = 100;
 
-  g_object_set(G_OBJECT(volume), "volume", vol / 100.0f, NULL);
+  g_object_set(G_OBJECT(volume), "volume", (gdouble)(vol / 100.0f), NULL);
+  player_refresh_equalizer();
 
   bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
   gst_bin_add_many(GST_BIN(pipeline), source, decodebin,
-                   conv, spec, volume, sink, NULL);
+                   conv, equalizer, spec, volume, sink, NULL);
 
   if (!gst_element_link(source, decodebin)
-      || !gst_element_link_many(conv, spec, volume, sink, NULL))
+      || !gst_element_link_many(conv, equalizer, spec, volume, sink, NULL))
     {
       ERROR("Failed to link the audio pipeline");
       return -1;
@@ -209,7 +212,7 @@ void player_bus_pop()
 
 void player_set_fps(int fps)
 {
-  g_object_set(G_OBJECT(spec), "interval", 1000000000L / fps, NULL);
+  g_object_set(G_OBJECT(spec), "interval", (guint64)(1000000000LL / fps), NULL);
 }
 
 void player_toggle()
@@ -338,10 +341,23 @@ void player_toggle_mute()
 void player_set_volume(int v)
 {
   vol = v;
-  g_object_set(G_OBJECT(volume), "volume", v / 100.0f, NULL);
+  g_object_set(G_OBJECT(volume), "volume", (gdouble)(v / 100.0f), NULL);
 }
 
 int player_get_volume()
 {
   return vol;
+}
+
+void player_refresh_equalizer()
+{
+  int *bands;
+
+  bands = config_get()->eqbands;
+  g_object_set(G_OBJECT(equalizer), "band0", (gdouble)bands[0],
+               "band1", (gdouble)bands[1], "band2", (gdouble)bands[2],
+               "band3", (gdouble)bands[3], "band4", (gdouble)bands[4],
+               "band5", (gdouble)bands[5], "band6", (gdouble)bands[6],
+               "band7", (gdouble)bands[7], "band8", (gdouble)bands[8],
+               "band9", (gdouble)bands[9], NULL);
 }
