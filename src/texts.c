@@ -35,7 +35,7 @@
 #define TIMEW 0.2f
 
 static const int FPSYPX = -16,
-                 FPSWPX = 40,
+                 FPSWPX = 144,
                  FPSHPX = 16;
 static const float FONTLW = 1.0f / FONTW,
                    FONTLH = 1.0f / FONTH,
@@ -187,7 +187,8 @@ int texts_render()
   shaders_use(PROG_DIRECTTEX);
 
   // fps
-  snprintf(buffer, sizeof(buffer), "fps: %d", render_get_fps());
+  snprintf(buffer, sizeof(buffer), "fps: %d (%.3f ms)",
+           render_get_norm_fps(), 1000.0f / render_get_norm_fps());
   glVertexAttrib4f(COLOR_ATTRIB, 0.8f, 0.8f, 0.8f, 1.0f);
   if (render_string(buffer, FPSX, render_itofy(FPSYPX), 0.0f,
                     render_itofx(FPSWPX), render_itofy(FPSHPX), 0.0f))

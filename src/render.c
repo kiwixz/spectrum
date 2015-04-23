@@ -34,6 +34,7 @@
 #include "volbar.h"
 
 static const int     MOTIONBLEND = 40; // lower for more motionblur
+static const float   FPSSTABILITY = 0.9f;
 static const GLubyte FBOVBOID[6] = {
   0, 1, 2, 2, 3, 0
 };
@@ -49,7 +50,7 @@ static const GLfloat FBOVBOVERT[2 * 2 * 4] = {
   1.0f, 1.0f
 };
 
-static int    fps, areaw, areah, ssaaw, ssaah;
+static int    fps, nfps, areaw, areah, ssaaw, ssaah;
 static GLuint fbovbo, fbovboi;
 static GLuint fbos[2], fbostex[2], fbosrbuf[2];
 
@@ -239,20 +240,15 @@ static int render_frame_fbo()
 
 int render(int motionblur)
 {
-  static int lastsec, cfps;
+  static gint64 lastus;
 
-  int sec;
+  gint64 us;
 
   // fps
-  sec = time(NULL);
-  if (sec == lastsec)
-    ++cfps;
-  else
-    {
-      fps = cfps;
-      cfps = 1;
-      lastsec = sec;
-    }
+  us = g_get_monotonic_time();
+  fps = 1000000L / (us - lastus);
+  nfps = FPSSTABILITY * nfps + (1.0f - FPSSTABILITY) * fps;
+  lastus = us;
   if (fps < 1)
     fps = 1;
 
@@ -287,6 +283,11 @@ float render_itofy(int n)
     return (float)n / areah;
   else
     return 1 + (float)n / areah;
+}
+
+int render_get_norm_fps()
+{
+  return nfps;
 }
 
 int render_get_fps()
