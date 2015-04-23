@@ -24,6 +24,7 @@
 #include "bars.h"
 #include "buttons.h"
 #include "particles.h"
+#include "player.h"
 #include "shaders.h"
 #include "shared.h"
 #include "spectrum.h"
@@ -32,7 +33,7 @@
 #include "timebar.h"
 #include "volbar.h"
 
-static const float   MOTIONBLEND = 40 / (float)FPS;
+static const int     MOTIONBLEND = 40; // lower for more motionblur
 static const GLubyte FBOVBOID[6] = {
   0, 1, 2, 2, 3, 0
 };
@@ -48,7 +49,7 @@ static const GLfloat FBOVBOVERT[2 * 2 * 4] = {
   1.0f, 1.0f
 };
 
-static int    areaw, areah, ssaaw, ssaah;
+static int    fps, areaw, areah, ssaaw, ssaah;
 static GLuint fbovbo, fbovboi;
 static GLuint fbos[2], fbostex[2], fbosrbuf[2];
 
@@ -128,9 +129,9 @@ int render_setup(GtkWidget *area)
 
   areaw = area->allocation.width;
   areah = area->allocation.height;
-  ratio = (float)areaw / areah;
   ssaaw = SSAA * areaw;
   ssaah = SSAA * areah;
+  ratio = (float)areaw / areah;
 
   // matrix
   glMatrixMode(GL_MODELVIEW);
@@ -142,6 +143,7 @@ int render_setup(GtkWidget *area)
             0.5f, 0.5f, 0.0f,
             0.0f, 1.0f, 0.0f);
 
+  // use 0;1 instead of -1;1
   glTranslatef(0.5f - ratio / 2, 0.0f, 0.0f);
   glScalef(ratio, 1.0f, 1.0f);
 
@@ -237,6 +239,26 @@ static int render_frame_fbo()
 
 int render(int motionblur)
 {
+  static int lastsec, cfps;
+
+  int sec;
+
+  // fps
+  sec = time(NULL);
+  if (sec == lastsec)
+    ++cfps;
+  else
+    {
+      fps = cfps;
+      cfps = 1;
+      lastsec = sec;
+    }
+  if (fps < 1)
+    fps = 1;
+
+  player_set_fps(fps);
+
+  // render
   if (render_frame_fbo())
     return -1;
 
@@ -244,7 +266,7 @@ int render(int motionblur)
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glBindTexture(GL_TEXTURE_2D, fbostex[1]);
   glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f,
-                   motionblur ? MOTIONBLEND : 1.0f);
+                   motionblur ? (float)MOTIONBLEND / render_get_fps() : 1.0f);
 
   render_static_vbo();
 
@@ -265,4 +287,9 @@ float render_itofy(int n)
     return (float)n / areah;
   else
     return 1 + (float)n / areah;
+}
+
+int render_get_fps()
+{
+  return fps;
 }

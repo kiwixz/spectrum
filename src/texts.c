@@ -179,29 +179,17 @@ static int render_string(const char *text,
 
 int texts_render()
 {
-  static int  lastsec, fps;
-  static char fpsstr[64];
-  int         sec, len;
-  float       w, h, ratio;
-  char        buffer[32] = {0};
-  const char  *name;
+  int        len;
+  float      w, h, ratio;
+  char       buffer[64];
+  const char *name;
 
   shaders_use(PROG_DIRECTTEX);
 
   // fps
-  sec = time(NULL);
-  if (sec == lastsec)
-    ++fps;
-  else
-    {
-      snprintf(fpsstr, sizeof(fpsstr), "fps: %d", fps + 1);
-
-      fps = 0;
-      lastsec = sec;
-    }
-
+  snprintf(buffer, sizeof(buffer), "fps: %d", render_get_fps());
   glVertexAttrib4f(COLOR_ATTRIB, 0.8f, 0.8f, 0.8f, 1.0f);
-  if (render_string(fpsstr, FPSX, render_itofy(FPSYPX), 0.0f,
+  if (render_string(buffer, FPSX, render_itofy(FPSYPX), 0.0f,
                     render_itofx(FPSWPX), render_itofy(FPSHPX), 0.0f))
     return -1;
 

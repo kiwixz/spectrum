@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "particles.h"
+#include "render.h"
 #include "shaders.h"
 #include "shared.h"
 #include "spectrum.h"
@@ -35,19 +36,20 @@ typedef struct
 
 #define NUMBER 2048
 
-static const int   ANIMLEN = 8 * FPS;
-static const float GRAVITY = 1.001f,
-                   GOBACK = 0.01f,
-                   MOVXMIN = -0.3f / FPS,
-                   MOVXMAX = 0.3f / FPS,
-                   MOVYMIN = -0.15f / FPS,
-                   MOVYMAX = -0.3f / FPS,
+static const int   ANIMLEN = 8;
+static const float GOBACK = 0.01f,
+                   GRAVITY = 1.001f,
+                   MOVXMIN = -0.3f,
+                   MOVXMAX = 0.3f,
+                   MOVYMIN = -0.15f,
+                   MOVYMAX = -0.3f,
                    OPACITYMIN = 0.0f,
                    OPACITYMAX = 1.0f,
                    SIZEMIN = 1.0f,
                    SIZEMAX = 8.0f;
 
-static int      start, end;
+static float    opacityk;
+static int      opacityinc;
 static GLuint   vbo;
 static Particle parts[NUMBER];
 static GLfloat  vert[NUMBER * (3 + 4 + 1)];
@@ -80,7 +82,7 @@ static void respawn_particle(int index, int vindex)
   vert[vindex + 1] = randf(1.0f, 1.1f);
 
   parts[index].opacity = randf(OPACITYMIN, OPACITYMAX);
-  vert[3 * NUMBER + index * 4 + 3] = parts[index].opacity * end / ANIMLEN;
+  vert[3 * NUMBER + index * 4 + 3] = parts[index].opacity * opacityk;
 
   vert[(3 + 4) * NUMBER + index] = 1 / randf(1.0f / SIZEMAX, 1.0f / SIZEMIN);
 }
@@ -91,7 +93,7 @@ int particles_new()
 
   glGenBuffers(1, &vbo);
 
-  end = ANIMLEN;
+  opacityk = 1.0f;
   for (i = 0; i < NUMBER; ++i)
     {
       int iv;
@@ -104,7 +106,7 @@ int particles_new()
           = vert[3 * NUMBER + i * 4 + 2] = 1.0f;
       vert[3 * NUMBER + i * 4 + 3] = 0.0f;
     }
-  end = 0;
+  opacityk = 0;
 
   return 0;
 }
@@ -116,34 +118,33 @@ void particles_delete()
 
 void particles_render()
 {
-  int i;
+  int   i;
+  float k;
 
-  if (end < 0)
+  if (opacityk < 0.0f)
     return;
-  else if (start)
+  else if (opacityinc)
     {
-      for (i = 0; i < NUMBER; ++i)
-        vert[3 * NUMBER + i * 4 + 3] += parts[i].opacity / ANIMLEN;
+      opacityk += (float)opacityinc / ANIMLEN / render_get_fps();
+      if (opacityk > 1.0f)
+        {
+          opacityk = 1.0f;
+          opacityinc = 0;
+        }
+      else
+        for (i = 0; i < NUMBER; ++i)
+          vert[3 * NUMBER + i * 4 + 3] = parts[i].opacity * opacityk;
 
-      --start;
-      ++end;
-    }
-  else if (end < ANIMLEN)
-    {
-      for (i = 0; i < NUMBER; ++i)
-        vert[3 * NUMBER + i * 4 + 3] -= parts[i].opacity / ANIMLEN;
-
-      --end;
     }
 
+  k = (spectrum_get_averagevel() + spectrum_get_averagemag() - GOBACK)
+    / render_get_fps();
   for (i = 0; i < NUMBER; ++i)
     {
       int   iv;
-      float old, k;
+      float old;
 
       iv = i * 3;
-      k = spectrum_get_averagevel() + spectrum_get_averagemag() - GOBACK;
-
       old = parts[i].movx;
       parts[i].movx /= GRAVITY;
       if (old > 0)
@@ -182,16 +183,14 @@ void particles_render()
 
 void particles_start()
 {
-  start = ANIMLEN - end;
-
-  if (end == -1)
-    end = 0;
+  opacityinc = 1;
+  if (opacityk < 0.0f)
+    opacityk = 0.0f;
 }
 
 void particles_end()
 {
-  start = 0;
-
-  if (end > 0)
-    --end;
+  opacityinc = -1;
+  if (opacityk < 0.0f)
+    opacityk = 0.0f;
 }

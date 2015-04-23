@@ -45,7 +45,7 @@ typedef struct
   float   rgb;
 } ButtonInfo;
 
-static const float   ILLUMINATION_DECAY = 3 / (float)FPS;
+static const int     ILLUMINATION_DECAY = 3;
 static const GLubyte VBOID[6] = {
   0, 1, 2, 2, 3, 0
 };
@@ -155,7 +155,7 @@ void buttons_render()
         {
           glVertexAttrib4f(COLOR_ATTRIB,
                            infos[b].rgb, infos[b].rgb, infos[b].rgb, 1.0f);
-          infos[b].rgb -= ILLUMINATION_DECAY;
+          infos[b].rgb -= (float)ILLUMINATION_DECAY / render_get_fps();
         }
       else
         glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f, 1.0f);

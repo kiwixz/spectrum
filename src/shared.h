@@ -24,7 +24,6 @@
 #define SSAA 2
 
 #define BARSY 0.3f
-#define FPS 120
 #define MAXVOL 150
 #define MINDB -80
 #define SMOOTHING 1

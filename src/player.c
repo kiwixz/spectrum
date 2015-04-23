@@ -37,7 +37,7 @@
 static int        vol, muted;
 static gint64     position, duration;
 static char       *name;
-static GstElement *pipeline, *source, *volume;
+static GstElement *pipeline, *source, *spec, *volume;
 static GstBus     *bus;
 
 static void process_message(GstMessage *msg)
@@ -131,7 +131,7 @@ static int set_name(const char *file)
 int player_new(GMainLoop *loop)
 {
   float      configvol;
-  GstElement *decodebin, *conv, *spec, *sink;
+  GstElement *decodebin, *conv, *sink;
 
   name = malloc(sizeof(char));
   if (!name)
@@ -158,8 +158,7 @@ int player_new(GMainLoop *loop)
     }
 
   // properties
-  g_object_set(G_OBJECT(spec), "bands", SPECBANDS,
-               "interval", 1000000000L / FPS, "threshold", MINDB, NULL);
+  g_object_set(G_OBJECT(spec), "bands", SPECBANDS, "threshold", MINDB, NULL);
 
   configvol = config_get()->vol;
   if (configvol)
@@ -206,6 +205,11 @@ void player_bus_pop()
       process_message(msg);
       gst_message_unref(msg);
     }
+}
+
+void player_set_fps(int fps)
+{
+  g_object_set(G_OBJECT(spec), "interval", 1000000000L / fps, NULL);
 }
 
 void player_toggle()

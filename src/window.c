@@ -273,7 +273,7 @@ int window_new(GMainLoop *mainloop)
   if (player_new(loop))
     return -1;
 
-  g_timeout_add_full(G_PRIORITY_DEFAULT_IDLE, 1000 / FPS, redraw, NULL, NULL);
+  g_idle_add(redraw, NULL);
 
   return 0;
 }

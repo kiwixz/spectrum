@@ -19,15 +19,15 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "render.h"
 #include "spectrum.h"
 #include "shared.h"
 
 #define MAXDB -30
 
-static const int KUP = 0.0333333f * FPS,
-                 KDOWN = 0.1333333f * FPS;
-
-static const float DBRATIO = (1.0f - BARSY) / (MAXDB - MINDB);
+static const float KUP = 0.0333333f,
+                   KDOWN = 0.1333333f,
+                   DBRATIO = (1.0f - BARSY) / (MAXDB - MINDB);
 
 static float    averagemag, averagevel;
 static Spectrum *spectrum;
@@ -49,19 +49,15 @@ void spectrum_delete()
   free(spectrum);
 }
 
-static void band_set(int band, float mag)
+static void band_set(int band, float mag, int ku, int kd)
 {
   float oldmag;
 
   oldmag = spectrum[band].mag;
   if (mag > oldmag)
-    {
-      spectrum[band].mag = ((KUP - 1) * oldmag + mag) / KUP;
-    }
+    spectrum[band].mag = ((ku - 1) * oldmag + mag) / ku;
   else
-    {
-      spectrum[band].mag = ((KDOWN - 1) * oldmag + mag) / KDOWN;
-    }
+    spectrum[band].mag = ((kd - 1) * oldmag + mag) / kd;
 
   spectrum[band].vel = (spectrum[band].mag - mag) / 2;
   if (spectrum[band].vel < 0)
@@ -71,17 +67,19 @@ static void band_set(int band, float mag)
 void spectrum_parse(const GstStructure *s)
 {
   const GValue *magnitudes;
-  int          band;
+  int          band, ku, kd;
 
   magnitudes = gst_structure_get_value(s, "magnitude");
   averagemag = averagevel = 0.0f;
+  ku = KUP * render_get_fps() + 1;
+  kd = KDOWN * render_get_fps() + 1;
 
   for (band = 0; band < SPECBANDS; ++band)
     {
       const GValue *mag;
 
       mag = gst_value_list_get_value(magnitudes, band);
-      band_set(band, (g_value_get_float(mag) - MINDB) * DBRATIO);
+      band_set(band, (g_value_get_float(mag) - MINDB) * DBRATIO, ku, kd);
 
       averagemag += spectrum[band].mag;
       averagevel += spectrum[band].vel;

@@ -29,4 +29,6 @@ int render(int motionblur);
 float render_itofx(int n);
 float render_itofy(int n);
 
+int render_get_fps();
+
 #endif
