@@ -43,8 +43,9 @@ int  shaders_init();
 void shaders_delete();
 
 void shaders_use(Program prog);
-void shaders_set_uniforms(GLfloat *matrix);
-void shaders_send_matrix(Program prog, GLfloat *matrix);
+void shaders_set_const(GLfloat *matrix);
+void shaders_set_matrix(Program prog, GLfloat *matrix);
+void shaders_set_offset(Program prog, GLfloat x, GLfloat y, GLfloat z);
 void shaders_set_texture(Program prog, GLuint tex);
 
 #endif

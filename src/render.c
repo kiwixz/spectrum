@@ -149,7 +149,7 @@ int render_setup(GtkWidget *area)
   glScalef(ratio, 1.0f, 1.0f);
 
   glGetFloatv(GL_MODELVIEW_MATRIX, matrix);
-  shaders_set_uniforms(matrix);
+  shaders_set_const(matrix);
   glLoadIdentity();
 
   if (!done)

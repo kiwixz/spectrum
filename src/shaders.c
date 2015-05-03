@@ -184,19 +184,19 @@ void shaders_use(Program prog)
   glUseProgram(progs[prog]);
 }
 
-void shaders_set_uniforms(GLfloat *matrix)
+void shaders_set_const(GLfloat *matrix)
 {
   shaders_use(PROG_BARS);
   shaders_set_texture(PROG_BARS, 0);
 
   shaders_use(PROG_DIRECT);
-  shaders_send_matrix(PROG_DIRECT, matrix);
+  shaders_set_matrix(PROG_DIRECT, matrix);
 
   shaders_use(PROG_DIRECTPT);
-  shaders_send_matrix(PROG_DIRECTPT, matrix);
+  shaders_set_matrix(PROG_DIRECTPT, matrix);
 
   shaders_use(PROG_DIRECTTEX);
-  shaders_send_matrix(PROG_DIRECTTEX, matrix);
+  shaders_set_matrix(PROG_DIRECTTEX, matrix);
   shaders_set_texture(PROG_DIRECTTEX, 0);
 
   shaders_use(PROG_PARTICLES);
@@ -206,10 +206,15 @@ void shaders_set_uniforms(GLfloat *matrix)
   shaders_set_texture(PROG_PASS, 0);
 }
 
-void shaders_send_matrix(Program prog, GLfloat *matrix)
+void shaders_set_matrix(Program prog, GLfloat *matrix)
 {
   glUniformMatrix4fv(glGetUniformLocation(progs[prog], "matrix"),
                      1, GL_FALSE, matrix);
+}
+
+void shaders_set_offset(Program prog, GLfloat x, GLfloat y, GLfloat z)
+{
+  glUniform3f(glGetUniformLocation(progs[prog], "offset"), x, y, z);
 }
 
 void shaders_set_texture(Program prog, GLuint tex)

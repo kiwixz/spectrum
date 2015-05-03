@@ -26,10 +26,11 @@ out vec4 vf_color;
 out vec2 vf_texcoord;
 
 uniform mat4 matrix;
+uniform vec3 offset;
 
 void main()
 {
   vf_color = color;
   vf_texcoord = texcoord;
-  gl_Position = matrix * vec4(position, 1.0f);
+  gl_Position = matrix * vec4(position + offset, 1.0f);
 }
