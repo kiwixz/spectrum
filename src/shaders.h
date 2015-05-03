@@ -39,13 +39,20 @@ typedef enum
   PROG_PASS = 6
 } Program;
 
+#define UNIFSLEN 3
+typedef enum
+{
+  UNIF_MATRIX = 0,
+  UNIF_OFFSET = 1,
+  UNIF_TEX = 2
+} Uniform;
+
 int  shaders_init();
 void shaders_delete();
 
 void shaders_use(Program prog);
 void shaders_set_const(GLfloat *matrix);
-void shaders_set_matrix(Program prog, GLfloat *matrix);
-void shaders_set_offset(Program prog, GLfloat x, GLfloat y, GLfloat z);
 void shaders_set_texture(Program prog, GLuint tex);
+GLint shaders_get_uniformid(Program prog, Uniform unif);
 
 #endif

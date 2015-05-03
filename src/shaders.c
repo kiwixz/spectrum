@@ -25,6 +25,7 @@
 #include "textures.h"
 
 static GLuint progs[PROGSLEN];
+static GLint  unifs[PROGSLEN][UNIFSLEN];
 
 static char *read_file(const char *file)
 {
@@ -102,6 +103,13 @@ static GLuint compile_shader(const char *file, GLuint shader)
   return shader;
 }
 
+static void get_uniformsid(Program prog)
+{
+  unifs[prog][UNIF_MATRIX] = glGetUniformLocation(progs[prog], "matrix");
+  unifs[prog][UNIF_OFFSET] = glGetUniformLocation(progs[prog], "offset");
+  unifs[prog][UNIF_TEX] = glGetUniformLocation(progs[prog], "tex");
+}
+
 static int create_program(int index, const char *vertf, const char *fragf)
 {
   GLint  done;
@@ -150,6 +158,8 @@ static int create_program(int index, const char *vertf, const char *fragf)
   glDeleteShader(vert);
   glDeleteShader(frag);
 
+  get_uniformsid(index);
+
   return 0;
 }
 
@@ -184,6 +194,12 @@ void shaders_use(Program prog)
   glUseProgram(progs[prog]);
 }
 
+static void shaders_set_matrix(Program prog, GLfloat *matrix)
+{
+  glUniformMatrix4fv(shaders_get_uniformid(prog, UNIF_MATRIX),
+                     1, GL_FALSE, matrix);
+}
+
 void shaders_set_const(GLfloat *matrix)
 {
   shaders_use(PROG_BARS);
@@ -206,18 +222,12 @@ void shaders_set_const(GLfloat *matrix)
   shaders_set_texture(PROG_PASS, 0);
 }
 
-void shaders_set_matrix(Program prog, GLfloat *matrix)
+GLint shaders_get_uniformid(Program prog, Uniform unif)
 {
-  glUniformMatrix4fv(glGetUniformLocation(progs[prog], "matrix"),
-                     1, GL_FALSE, matrix);
-}
-
-void shaders_set_offset(Program prog, GLfloat x, GLfloat y, GLfloat z)
-{
-  glUniform3f(glGetUniformLocation(progs[prog], "offset"), x, y, z);
+  return unifs[prog][unif];
 }
 
 void shaders_set_texture(Program prog, GLuint tex)
 {
-  glUniform1i(glGetUniformLocation(progs[prog], "tex"), tex);
+  glUniform1i(shaders_get_uniformid(prog, UNIF_TEX), tex);
 }
