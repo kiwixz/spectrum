@@ -31,7 +31,8 @@
 
 static const float BARSW = (1.0f - 2 * SPACESIDE) / SPECBANDS - SPACEBETWEEN,
                    BARSMINH = 0.01f,
-                   BARSD = 0.0f;
+  BARSD = 0.0f,
+  MAXOFFSETZ = 0.1f;
 static const GLushort VBOID[6] = {
   0, 1, 2, 2, 3, 0
 };
@@ -158,11 +159,6 @@ static void set_bar_h(int vi, GLfloat h)
                             = BARSY + h * (1.0f - BARSY);
 }
 
-static void set_bar_z(int vi, GLfloat h)
-{
-  // not yet implemented
-}
-
 static void set_bar_color(int bar, GLfloat r, GLfloat g, GLfloat b)
 {
   int i, max;
@@ -192,7 +188,6 @@ void bars_render()
       vi = 5 * bar * 4 * 3;
 
       set_bar_h(vi, spectrum[bar].mag);
-      set_bar_z(vi, spectrum[bar].vel);
       set_bar_color(bar, 6 * spectrum[bar].vel, 1.0f, spectrum[bar].mag);
     }
 
@@ -204,6 +199,8 @@ void bars_render()
                sizeof(GLfloat),
                vert, GL_STREAM_DRAW);
 
+  glUniform3f(shaders_get_uniformid(PROG_DIRECT, UNIF_OFFSET),
+              0.0f, 0.0f, spectrum_get_averagemag() * MAXOFFSETZ);
   glEnableVertexAttribArray(POSITION_ATTRIB);
   glEnableVertexAttribArray(COLOR_ATTRIB);
   glVertexAttribPointer(POSITION_ATTRIB, 3, GL_FLOAT,
@@ -213,9 +210,10 @@ void bars_render()
                         (GLvoid *)(5 * SPECBANDS * 4 *
                                    3 * sizeof(GLfloat)));
 
-  glDrawElements(GL_TRIANGLES, 5 * SPECBANDS * 6,
-                 GL_UNSIGNED_SHORT, 0);
+  glDrawElements(GL_TRIANGLES, 5 * SPECBANDS * 6, GL_UNSIGNED_SHORT, 0);
 
   glDisableVertexAttribArray(POSITION_ATTRIB);
   glDisableVertexAttribArray(COLOR_ATTRIB);
+  glUniform3f(shaders_get_uniformid(PROG_DIRECT, UNIF_OFFSET),
+              0.0f, 0.0f, 0.0f);
 }
