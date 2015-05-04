@@ -28,6 +28,7 @@
 #include "shared.h"
 #include "spectrum.h"
 #include "textures.h"
+#include "window.h"
 
 #define FONTW 32 // letters by dimension
 #define FONTH 8
@@ -187,8 +188,8 @@ int texts_render()
   shaders_use(PROG_DIRECTTEX);
 
   // fps
-  snprintf(buffer, sizeof(buffer), "fps: %d (%.3f ms)",
-           render_get_norm_fps(), 1000.0f / render_get_norm_fps());
+  snprintf(buffer, sizeof(buffer), "fps: %d (%ld \x95s)",
+           window_get_fps(), window_get_ftime());
   glVertexAttrib4f(COLOR_ATTRIB, 0.8f, 0.8f, 0.8f, 1.0f);
   if (render_string(buffer, FPSX, render_itofy(FPSYPX), 0.0f,
                     render_itofx(FPSWPX), render_itofy(FPSHPX), 0.0f))

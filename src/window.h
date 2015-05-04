@@ -27,6 +27,8 @@
 
 int window_new(GMainLoop *loop);
 
+int window_get_fps();
+long window_get_ftime();
 int window_is_fullscreen();
 void window_set_fullscreen(int b);
 

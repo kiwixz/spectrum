@@ -24,6 +24,7 @@
 #include "shaders.h"
 #include "shared.h"
 #include "spectrum.h"
+#include "window.h"
 
 typedef struct
 {
@@ -125,7 +126,7 @@ void particles_render()
     return;
   else if (opacityinc)
     {
-      opacityk += (float)opacityinc / ANIMLEN / render_get_fps();
+      opacityk += (float)opacityinc / ANIMLEN / window_get_fps();
       if (opacityk > 1.0f)
         {
           opacityk = 1.0f;
@@ -138,7 +139,7 @@ void particles_render()
     }
 
   k = (spectrum_get_averagevel() + spectrum_get_averagemag() - GOBACK)
-    / render_get_fps();
+    / window_get_fps();
   for (i = 0; i < NUMBER; ++i)
     {
       int   iv;

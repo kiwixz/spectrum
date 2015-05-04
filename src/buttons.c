@@ -155,7 +155,7 @@ void buttons_render()
         {
           glVertexAttrib4f(COLOR_ATTRIB,
                            infos[b].rgb, infos[b].rgb, infos[b].rgb, 1.0f);
-          infos[b].rgb -= (float)ILLUMINATION_DECAY / render_get_fps();
+          infos[b].rgb -= (float)ILLUMINATION_DECAY / window_get_fps();
         }
       else
         glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f, 1.0f);

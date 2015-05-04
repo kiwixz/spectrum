@@ -32,9 +32,9 @@
 #include "textures.h"
 #include "timebar.h"
 #include "volbar.h"
+#include "window.h"
 
 static const int     MOTIONBLEND = 40; // lower for more motionblur
-static const float   FPSSTABILITY = 0.9f;
 static const GLubyte FBOVBOID[6] = {
   0, 1, 2, 2, 3, 0
 };
@@ -50,7 +50,7 @@ static const GLfloat FBOVBOVERT[2 * 2 * 4] = {
   1.0f, 1.0f
 };
 
-static int    fps, nfps, areaw, areah, ssaaw, ssaah;
+static int    areaw, areah, ssaaw, ssaah;
 static GLuint fbovbo, fbovboi;
 static GLuint fbos[2], fbostex[2], fbosrbuf[2];
 
@@ -240,21 +240,6 @@ static int render_frame_fbo()
 
 int render(int motionblur)
 {
-  static gint64 lastus;
-
-  gint64 us;
-
-  // fps
-  us = g_get_monotonic_time();
-  fps = 1000000L / (us - lastus);
-  nfps = FPSSTABILITY * nfps + (1.0f - FPSSTABILITY) * fps;
-  lastus = us;
-  if (fps < 1)
-    fps = 1;
-
-  player_set_fps(fps);
-
-  // render
   if (render_frame_fbo())
     return -1;
 
@@ -262,7 +247,7 @@ int render(int motionblur)
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   glBindTexture(GL_TEXTURE_2D, fbostex[1]);
   glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f,
-                   motionblur ? (float)MOTIONBLEND / render_get_fps() : 1.0f);
+                   motionblur ? (float)MOTIONBLEND / window_get_fps() : 1.0f);
 
   render_static_vbo();
 
@@ -283,14 +268,4 @@ float render_itofy(int n)
     return (float)n / areah;
   else
     return 1 + (float)n / areah;
-}
-
-int render_get_norm_fps()
-{
-  return nfps;
-}
-
-int render_get_fps()
-{
-  return fps;
 }

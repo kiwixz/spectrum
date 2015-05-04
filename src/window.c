@@ -34,9 +34,11 @@
 static const int DOUBLEBUFFER = 0,
                  DEFAULTW = 1280,
                  DEFAULTH = 720;
+static const float FPSSTABILITY = 0.9999f;
 
 static GtkWidget *window, *area;
-static int       fullscreen, areaw, areah, clicking, motionblur;
+static int       fps, fullscreen, areaw, areah, clicking, motionblur;
+static long      ftime;
 static GMainLoop *loop;
 
 static gboolean on_configure(GtkWidget *widget,
@@ -170,9 +172,38 @@ static gboolean on_state_change(GtkWidget *widget,
   return FALSE;
 }
 
+static int check_fps()
+{
+  static gint64 lastus;
+
+  long   diff;
+  gint64 us;
+
+  us = g_get_monotonic_time();
+  diff = us - lastus;
+  if ((diff < ftime * FPSSTABILITY) && ftime)
+    {
+      ftime *= FPSSTABILITY;
+      return 0;
+    }
+
+  lastus = us;
+  ftime = diff;
+  fps = 1000000L / diff;
+  if (!fps)
+    fps = 1;
+
+  return 1;
+}
+
 static gboolean redraw(gpointer nul)
 {
   GdkGLDrawable *gldrawable;
+
+  if (!check_fps())
+    return TRUE;
+
+  player_set_fps(fps);
 
   gldrawable = gtk_widget_get_gl_drawable(area);
   if (!gdk_gl_drawable_gl_begin(gldrawable, gtk_widget_get_gl_context(area)))
@@ -276,6 +307,16 @@ int window_new(GMainLoop *mainloop)
   g_idle_add(redraw, NULL);
 
   return 0;
+}
+
+int window_get_fps()
+{
+  return fps;
+}
+
+long window_get_ftime()
+{
+  return ftime;
 }
 
 int window_is_fullscreen()

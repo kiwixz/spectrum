@@ -19,9 +19,10 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "render.h"
 #include "spectrum.h"
+#include "render.h"
 #include "shared.h"
+#include "window.h"
 
 #define MAXDB -30
 
@@ -71,8 +72,8 @@ void spectrum_parse(const GstStructure *s)
 
   magnitudes = gst_structure_get_value(s, "magnitude");
   averagemag = averagevel = 0.0f;
-  ku = KUP * render_get_fps() + 1;
-  kd = KDOWN * render_get_fps() + 1;
+  ku = KUP * window_get_fps() + 1;
+  kd = KDOWN * window_get_fps() + 1;
 
   for (band = 0; band < SPECBANDS; ++band)
     {
