@@ -13,7 +13,7 @@ $(shell mkdir -p $(DIR))
 $(shell touch -a $(DEPEND))
 
 NAME=spectrum
-PKGLIBS=glew gtk+-2.0 gtkglext-1.0 gstreamer-1.0 libtiff-4
+PKGLIBS=glew gtk+-2.0 gtkglext-1.0 gstreamer-1.0 libtiff-4 opencv
 LIBS=-lm
 MACRO=-D_XOPEN_SOURCE -D_POSIX_C_SOURCE=199309L
 OPT=-O3 -ffast-math

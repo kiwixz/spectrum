@@ -22,14 +22,11 @@
 
 #include <gtk/gtk.h>
 
-int render_setup(GtkWidget *area);
+int  render_setup();
 void render_delete();
 
-int render(int motionblur);
+int   render(int motionblur);
 float render_itofx(int n);
 float render_itofy(int n);
-
-int render_get_fps();
-int render_get_norm_fps();
 
 #endif

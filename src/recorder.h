@@ -17,23 +17,9 @@
  * along with spectrum. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef WINDOW_H
-#define WINDOW_H
+#ifndef RECORDER_H
+#define RECORDER_H
 
-#include <gtk/gtk.h>
-#include <gtk/gtkgl.h>
-#include <gdk/gdkgl.h>
-#include <gst/gst.h>
 
-int window_new(GMainLoop *loop);
-
-int window_get_w();
-int window_get_h();
-int window_get_fps();
-long window_get_ftime();
-
-int window_is_fullscreen();
-void window_set_fullscreen(int b);
-void window_set_resizable(int b);
 
 #endif

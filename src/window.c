@@ -48,6 +48,10 @@ static gboolean on_configure(GtkWidget *widget,
 
   GdkGLDrawable *gldrawable;
 
+  areaw = area->allocation.width;
+  areah = area->allocation.height;
+  motionblur = 0;
+
   gldrawable = gtk_widget_get_gl_drawable(area);
   if (!gdk_gl_drawable_gl_begin(gldrawable, gtk_widget_get_gl_context(area)))
     {
@@ -70,14 +74,10 @@ static gboolean on_configure(GtkWidget *widget,
       done = 1;
     }
 
-  if (render_setup(area))
+  if (render_setup())
     return FALSE;
 
   gdk_gl_drawable_gl_end(gldrawable);
-
-  areaw = area->allocation.width;
-  areah = area->allocation.height;
-  motionblur = 0;
 
   return TRUE;
 }
@@ -309,6 +309,16 @@ int window_new(GMainLoop *mainloop)
   return 0;
 }
 
+int window_get_w()
+{
+  return areaw;
+}
+
+int window_get_h()
+{
+  return areah;
+}
+
 int window_get_fps()
 {
   return fps;
@@ -330,4 +340,9 @@ void window_set_fullscreen(int b)
     gtk_window_fullscreen(GTK_WINDOW(window));
   else
     gtk_window_unfullscreen(GTK_WINDOW(window));
+}
+
+void window_set_resizable(int b)
+{
+  gtk_window_set_resizable(GTK_WINDOW(window), b ? TRUE : FALSE);
 }

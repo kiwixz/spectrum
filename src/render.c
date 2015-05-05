@@ -50,7 +50,7 @@ static const GLfloat FBOVBOVERT[2 * 2 * 4] = {
   1.0f, 1.0f
 };
 
-static int    areaw, areah, ssaaw, ssaah;
+static int    ssaaw, ssaah;
 static GLuint fbovbo, fbovboi;
 static GLuint fbos[2], fbostex[2], fbosrbuf[2];
 
@@ -121,18 +121,16 @@ static int generate_fbos()
   return 0;
 }
 
-int render_setup(GtkWidget *area)
+int render_setup()
 {
   static int done;
 
   float   ratio;
   GLfloat matrix[16];
 
-  areaw = area->allocation.width;
-  areah = area->allocation.height;
-  ssaaw = SSAA * areaw;
-  ssaah = SSAA * areah;
-  ratio = (float)areaw / areah;
+  ssaaw = SSAA * window_get_w();
+  ssaah = SSAA * window_get_h();
+  ratio = (float)window_get_w() / window_get_h();
 
   // matrix
   glMatrixMode(GL_MODELVIEW);
@@ -221,7 +219,6 @@ static int render_frame_fbo()
   glClear(GL_COLOR_BUFFER_BIT);
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
-  // ssaa
   glViewport(0, 0, ssaaw, ssaah);
 
   render_two_passes(&particles_render, PROG_PARTICLES);
@@ -233,7 +230,7 @@ static int render_frame_fbo()
   render_two_passes(&bars_render, PROG_BARS);
   buttons_render();
 
-  glViewport(0, 0, areaw, areah);
+  glViewport(0, 0, window_get_w(), window_get_h());
 
   return 0;
 }
@@ -257,15 +254,15 @@ int render(int motionblur)
 float render_itofx(int n)
 {
   if (n >= 0)
-    return (float)n / areaw;
+    return (float)n / window_get_w();
   else
-    return 1 + (float)n / areaw;
+    return 1 + (float)n / window_get_w();
 }
 
 float render_itofy(int n)
 {
   if (n >= 0)
-    return (float)n / areah;
+    return (float)n / window_get_h();
   else
-    return 1 + (float)n / areah;
+    return 1 + (float)n / window_get_h();
 }
