@@ -89,7 +89,9 @@ int textures_init()
       || create_texture(TEX_OPEN, TEXPATH("open"))
       || create_texture(TEX_PLAY, TEXPATH("play"))
       || create_texture(TEX_PAUSE, TEXPATH("pause"))
+      || create_texture(TEX_REC, TEXPATH("rec"))
       || create_texture(TEX_STOP, TEXPATH("stop"))
+      || create_texture(TEX_STOPREC, TEXPATH("stoprec"))
       || create_texture(TEX_UNMUTE, TEXPATH("unmute")))
     return -1;
 

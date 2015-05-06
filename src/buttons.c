@@ -24,13 +24,14 @@
 #include "equalizer.h"
 #include "open.h"
 #include "player.h"
+#include "recorder.h"
 #include "render.h"
 #include "shaders.h"
 #include "shared.h"
 #include "textures.h"
 #include "window.h"
 
-#define BUTTONSLEN 6
+#define BUTTONSLEN 7
 typedef enum
 {
   BUTTON_FULLSCREEN = 0,
@@ -38,7 +39,8 @@ typedef enum
   BUTTON_MUTE = 2,
   BUTTON_OPEN = 3,
   BUTTON_PLAY = 4,
-  BUTTON_STOP = 5
+  BUTTON_REC = 5,
+  BUTTON_STOP = 6
 } Button;
 typedef struct
 {
@@ -94,16 +96,16 @@ int buttons_new()
   generate_button(BUTTON_EQUALIZER, TEX_EQUALIZER,
                   16 + 2 * (32 + 8) + 16, 2 * 40,
                   16 + 2 * (32 + 8) + 16 + 32, 2 * 40 + 32);
-  generate_button(BUTTON_FULLSCREEN, TEX_FULLSCREEN, 16, 3 * 40,
-                  16 + 32, 3 * 40 + 32);
+  generate_button(BUTTON_FULLSCREEN, TEX_FULLSCREEN, 16, 4 * 40, 16 + 32,
+                  4 * 40 + 32);
   generate_button(BUTTON_MUTE, TEX_MUTE, 16 + 2 * (32 + 8) + 16, 40,
                   16 + 2 * (32 + 8) + 16 + 32, 40 + 32);
-  generate_button(BUTTON_OPEN, TEX_OPEN, 16, 2 * 40,
-                  16 + 32, 2 * 40 + 32);
-  generate_button(BUTTON_PLAY, TEX_PLAY, 16, 40,
-                  16 + 32, 40 + 32);
-  generate_button(BUTTON_STOP, TEX_STOP, 16 + 32 + 8, 40,
-                  16 + 32 + 8 + 32, 40 + 32);
+  generate_button(BUTTON_OPEN, TEX_OPEN, 16, 2 * 40, 16 + 32, 2 * 40 + 32);
+  generate_button(BUTTON_PLAY, TEX_PLAY, 16, 40, 16 + 32, 40 + 32);
+  generate_button(BUTTON_REC, TEX_REC, 16, 3 * 40, 16 + 32,
+                  3 * 40 + 32);
+  generate_button(BUTTON_STOP, TEX_STOP, 16 + 32 + 8, 40, 16 + 32 + 8 + 32,
+                  40 + 32);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboi);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(VBOID), VBOID, GL_STATIC_DRAW);
@@ -180,6 +182,11 @@ void buttons_set_ismuted(int b)
   infos[BUTTON_MUTE].tex = b ? TEX_UNMUTE : TEX_MUTE;
 }
 
+void buttons_set_isrecording(int b)
+{
+  infos[BUTTON_REC].tex = b ? TEX_STOPREC : TEX_REC;
+}
+
 static void onclick(Button b)
 {
   switch (b)
@@ -211,6 +218,12 @@ static void onclick(Button b)
       case BUTTON_PLAY:
         {
           player_toggle();
+          break;
+        }
+
+      case BUTTON_REC:
+        {
+          recorder_toggle();
           break;
         }
 

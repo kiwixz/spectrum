@@ -2,5 +2,6 @@ bin/
 *~
 TODO
 
-# audio files for testing
+# files for testing
 *.m4a
+*.mkv

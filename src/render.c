@@ -25,6 +25,7 @@
 #include "buttons.h"
 #include "particles.h"
 #include "player.h"
+#include "recorder.h"
 #include "shaders.h"
 #include "shared.h"
 #include "spectrum.h"
@@ -132,9 +133,7 @@ int render_setup()
   ssaah = SSAA * window_get_h();
   ratio = (float)window_get_w() / window_get_h();
 
-  // matrix
   glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
 
   // angle = 2 * arctan(planwidth / (2 * cameradistance))
   gluPerspective(53.130102f, ratio, 0.1f, 10.0f);
@@ -247,6 +246,7 @@ int render(int motionblur)
                    motionblur ? (float)MOTIONBLEND / window_get_fps() : 1.0f);
 
   render_static_vbo();
+  recorder_frame();
 
   return 0;
 }

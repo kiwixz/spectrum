@@ -26,8 +26,9 @@ void buttons_delete();
 void buttons_update();
 void buttons_render();
 
-void buttons_set_isplaying(int b);
 void buttons_set_ismuted(int b);
+void buttons_set_isplaying(int b);
+void buttons_set_isrecording(int b);
 
 int buttons_click(int x, int y);
 

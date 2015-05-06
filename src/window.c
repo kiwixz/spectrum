@@ -25,6 +25,7 @@
 #include "buttons.h"
 #include "config.h"
 #include "player.h"
+#include "recorder.h"
 #include "render.h"
 #include "shaders.h"
 #include "shared.h"
@@ -181,10 +182,19 @@ static int check_fps()
 
   us = g_get_monotonic_time();
   diff = us - lastus;
-  if ((diff < ftime * FPSSTABILITY) && ftime)
+  if (ftime)
     {
-      ftime *= FPSSTABILITY;
-      return 0;
+      int recftime;
+
+      if (diff < ftime * FPSSTABILITY)
+        {
+          ftime *= FPSSTABILITY;
+          return 0;
+        }
+
+      recftime = recorder_ftime();
+      if (recftime && (diff < recftime))
+        return 0;
     }
 
   lastus = us;
@@ -345,4 +355,9 @@ void window_set_fullscreen(int b)
 void window_set_resizable(int b)
 {
   gtk_window_set_resizable(GTK_WINDOW(window), b ? TRUE : FALSE);
+}
+
+void window_resize(int w, int h)
+{
+  gtk_widget_set_size_request(window, w, h);
 }

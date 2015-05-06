@@ -35,5 +35,6 @@ long window_get_ftime();
 int window_is_fullscreen();
 void window_set_fullscreen(int b);
 void window_set_resizable(int b);
+void window_resize(int w, int h);
 
 #endif
