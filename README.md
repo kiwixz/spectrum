@@ -18,6 +18,7 @@ This program also need some libraries:
 - GtkGLExt
 - GStreamer
 - libtiff
+- OpenCV
 
 Finally, you need an audio file readable by GStreamer, or an URL to a video from a youtube-like site.
 
