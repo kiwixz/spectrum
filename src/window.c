@@ -201,7 +201,10 @@ static int check_fps()
   ftime = diff;
   nfps = 1000000L / diff;
   if (!nfps)
-    fps = 1;
+    {
+      fps = 1;
+      return 2;
+    }
 
   if ((nfps > fps + 1) || (nfps < fps - 1))
     {
@@ -215,7 +218,7 @@ static int check_fps()
     }
 }
 
-static gboolean redraw(gpointer isrec)
+static gboolean redraw(gpointer nul)
 {
   GdkGLDrawable *gldrawable;
 
@@ -332,6 +335,7 @@ int window_new(GMainLoop *mainloop)
   if (player_new(loop))
     return -1;
 
+  fps = 1;
   g_idle_add(redraw, NULL);
 
   return 0;
