@@ -43,4 +43,7 @@ int player_get_volume();
 
 void player_refresh_equalizer();
 
+void player_record_start();
+void player_record_stop();
+
 #endif

@@ -25,6 +25,6 @@ void recorder_stop();
 int  recorder_toggle();
 
 int recorder_frame();
-int recorder_ftime();
+int recorder_isrec();
 
 #endif

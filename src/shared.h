@@ -29,6 +29,10 @@
 #define SMOOTHING 1
 #define SPECBANDS 64
 
+#define RECAUDIOFILE "/tmp/spectrum_rec_audio.wav"
+#define RECFPS 60
+#define RECFTIME 1000000L / RECFPS
+
 #define TIMEBARH 0.03f
 #define VOLBARXPX 16 + 3 * (32 + 8) + 16
 #define VOLBARYPX 40

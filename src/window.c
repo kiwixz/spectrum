@@ -177,43 +177,61 @@ static int check_fps()
 {
   static gint64 lastus;
 
+  int    nfps;
   long   diff;
   gint64 us;
 
   us = g_get_monotonic_time();
   diff = us - lastus;
-  if (ftime)
+  if (ftime && (diff < ftime * FPSSTABILITY))
     {
-      int recftime;
-
-      if (diff < ftime * FPSSTABILITY)
-        {
-          ftime *= FPSSTABILITY;
-          return 0;
-        }
-
-      recftime = recorder_ftime();
-      if (recftime && (diff < recftime))
-        return 0;
+      ftime *= FPSSTABILITY;
+      return 0;
     }
+
+  if (recorder_isrec())
+    while (diff < RECFTIME) // limit to the desired framerate
+      {
+        us = g_get_monotonic_time();
+        diff = us - lastus;
+      }
+
 
   lastus = us;
   ftime = diff;
-  fps = 1000000L / diff;
-  if (!fps)
+  nfps = 1000000L / diff;
+  if (!nfps)
     fps = 1;
 
-  return 1;
+  if ((nfps > fps + 1) || (nfps < fps - 1))
+    {
+      fps = nfps;
+      return 2;
+    }
+  else
+    {
+      fps = nfps;
+      return 1;
+    }
 }
 
-static gboolean redraw(gpointer nul)
+static gboolean redraw(gpointer isrec)
 {
   GdkGLDrawable *gldrawable;
 
-  if (!check_fps())
-    return TRUE;
+  switch (check_fps())
+    {
+      case 0:
+        {
+          return TRUE;
+        }
 
-  player_set_fps(fps);
+      case 2:
+        {
+          player_set_fps(fps);
+          break;
+        }
+    }
 
   gldrawable = gtk_widget_get_gl_drawable(area);
   if (!gdk_gl_drawable_gl_begin(gldrawable, gtk_widget_get_gl_context(area)))

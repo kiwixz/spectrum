@@ -37,8 +37,9 @@
 static int        vol, muted;
 static gint64     position, duration;
 static char       *name;
-static GstElement *pipeline, *source, *equalizer, *spec, *volume;
+static GstElement *pipeline, *source, *equalizer, *tee, *spec, *volume, *valve;
 static GstBus     *bus;
+static GstPad     *rqueuepad;
 
 static void process_message(GstMessage *msg)
 {
@@ -131,7 +132,9 @@ static int set_name(const char *file)
 int player_new(GMainLoop *loop)
 {
   float      configvol;
-  GstElement *decodebin, *conv, *sink;
+  GstElement *decodebin, *conv, *queue, *sink,*rqueue, *encoder, *fsink;
+  GstPad         *queuepad;
+  GstPadTemplate *padtemplate;
 
   name = malloc(sizeof(char));
   if (!name)
@@ -146,13 +149,20 @@ int player_new(GMainLoop *loop)
   source = gst_element_factory_make("filesrc", NULL);
   decodebin = gst_element_factory_make("decodebin", NULL);
   conv = gst_element_factory_make("audioconvert", NULL);
-    equalizer = gst_element_factory_make("equalizer-10bands", NULL);
+  tee = gst_element_factory_make("tee", NULL);
+  queue = gst_element_factory_make("queue2", NULL);
+  equalizer = gst_element_factory_make("equalizer-10bands", NULL);
   spec = gst_element_factory_make("spectrum", NULL);
   volume = gst_element_factory_make("volume", NULL);
   sink = gst_element_factory_make("autoaudiosink", NULL);
+  rqueue = gst_element_factory_make("queue2", NULL);
+  valve = gst_element_factory_make("valve", NULL);
+  encoder = gst_element_factory_make("wavenc", NULL);
+  fsink = gst_element_factory_make("filesink", NULL);
 
-  if (!pipeline || !source || !decodebin || !conv
-      || !spec || !volume || !equalizer || !sink)
+  if (!pipeline || !source || !decodebin || !conv || !tee || !queue
+      || !equalizer || !spec || !volume || !sink || !rqueue || !valve
+      || !encoder || !fsink)
     {
       ERROR("Failed to create the audio pipeline");
       return -1;
@@ -161,6 +171,8 @@ int player_new(GMainLoop *loop)
   // properties
   g_object_set(G_OBJECT(spec), "bands", (guint)SPECBANDS,
                "threshold", (gint)MINDB, NULL);
+  g_object_set(G_OBJECT(valve), "drop", TRUE, NULL);
+  g_object_set(G_OBJECT(fsink), "async", FALSE, "location", RECAUDIOFILE, NULL);
 
   configvol = config_get()->vol;
   if (configvol)
@@ -171,17 +183,38 @@ int player_new(GMainLoop *loop)
   g_object_set(G_OBJECT(volume), "volume", (gdouble)(vol / 100.0f), NULL);
   player_refresh_equalizer();
 
+  // links
   bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
-  gst_bin_add_many(GST_BIN(pipeline), source, decodebin,
-                   conv, equalizer, spec, volume, sink, NULL);
+  gst_bin_add_many(GST_BIN(pipeline), source, decodebin, conv, tee, queue,
+                   equalizer, spec, volume, sink, rqueue, valve, encoder,
+                   fsink, NULL);
 
   if (!gst_element_link(source, decodebin)
-      || !gst_element_link_many(conv, equalizer, spec, volume, sink, NULL))
+      || !gst_element_link(conv, tee)
+      || !gst_element_link_many(queue, equalizer, spec, volume, sink, NULL)
+      || !gst_element_link_many(rqueue, valve, encoder, fsink, NULL))
     {
       ERROR("Failed to link the audio pipeline");
       return -1;
     }
+
+  // other links
   g_signal_connect(decodebin, "pad-added", G_CALLBACK(on_pad_added), conv);
+
+  padtemplate =
+    gst_element_class_get_pad_template(GST_ELEMENT_GET_CLASS(tee), "src_%u");
+  queuepad = gst_element_get_static_pad(queue, "sink");
+  rqueuepad = gst_element_get_static_pad(rqueue, "sink");
+  if ((gst_pad_link(gst_element_request_pad(tee, padtemplate, NULL, NULL),
+                    queuepad) != GST_PAD_LINK_OK) ||
+      (gst_pad_link(gst_element_request_pad(tee, padtemplate, NULL, NULL),
+                    rqueuepad) != GST_PAD_LINK_OK))
+    {
+      ERROR("Failed to link tee");
+      return -1;
+    }
+  gst_object_unref(queuepad);
+  gst_object_unref(rqueuepad);
 
   return 0;
 }
@@ -250,10 +283,9 @@ int player_play_file(const char *file)
 
 int player_set_position(float frac)
 {
-  if (!duration || !gst_element_seek_simple(pipeline, GST_FORMAT_TIME,
-                                            GST_SEEK_FLAG_FLUSH |
-                                            GST_SEEK_FLAG_KEY_UNIT,
-                                            frac * duration))
+  if (!duration
+      || !gst_element_seek_simple(pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH
+                                  | GST_SEEK_FLAG_KEY_UNIT, frac * duration))
     return -1;
 
   return 0;
@@ -360,4 +392,15 @@ void player_refresh_equalizer()
                "band5", (gdouble)bands[5], "band6", (gdouble)bands[6],
                "band7", (gdouble)bands[7], "band8", (gdouble)bands[8],
                "band9", (gdouble)bands[9], NULL);
+}
+
+void player_record_start()
+{
+  g_object_set(G_OBJECT(valve), "drop", FALSE, NULL);
+}
+
+void player_record_stop()
+{
+  gst_element_send_event(valve, gst_event_new_eos());
+  g_object_set(G_OBJECT(valve), "drop", TRUE, NULL);
 }

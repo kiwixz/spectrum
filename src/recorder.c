@@ -26,22 +26,25 @@
 #include <opencv2/highgui/highgui_c.h>
 #include "recorder.h"
 #include "buttons.h"
+#include "player.h"
 #include "shared.h"
 #include "window.h"
 
-#define VIDEOFPS 60
 #define CODEC 'X', 'V', 'I', 'D'
+#define RECVIDEOFILE "/tmp/spectrum_rec_video.mkv"
+#define AUDIOADDER                     \
+  "xterm -e ffmpeg -i '"RECVIDEOFILE \
+  "' -i '"RECAUDIOFILE "' -vcodec copy -shortest -y '%s' &"
 
-static const int ftime = 1000000L / VIDEOFPS;
+static const int CMDLEN = 8192;
 
 static int           width, height, row, size;
 static CvVideoWriter *writer;
 static IplImage      *img;
-static char          *data;
+static char          *data, *file;
 
-static int create_writer()
+static int ask_file()
 {
-  char      *file;
   GtkWidget *fc;
 
   fc = gtk_file_chooser_dialog_new("Save a video", NULL,
@@ -58,10 +61,6 @@ static int create_writer()
     }
 
   file = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(fc));
-  writer = cvCreateVideoWriter(file, CV_FOURCC(CODEC), VIDEOFPS,
-                               cvSize(width, height), 1);
-
-  g_free(file);
   gtk_widget_destroy(fc);
 
   return 0;
@@ -76,9 +75,11 @@ int recorder_start()
   row = width * 3;
   size = height * row;
 
-  if (create_writer())
+  if (ask_file())
     return 1;
 
+  writer = cvCreateVideoWriter(RECVIDEOFILE, CV_FOURCC(CODEC), RECFPS,
+                               cvSize(width, height), 1);
   if (!writer)
     {
       ERROR("Failed to create video writer");
@@ -100,15 +101,23 @@ int recorder_start()
     }
 
   buttons_set_isrecording(1);
+  player_record_start();
   return 0;
 }
 
 void recorder_stop()
 {
+  char cmd[CMDLEN];
+
+  player_record_stop();
   cvReleaseImageHeader(&img);
   cvReleaseVideoWriter(&writer);
-  free(data);
 
+  snprintf(cmd, CMDLEN, AUDIOADDER, file);
+  system(cmd);
+  g_free(file);
+
+  free(data);
   data = NULL;
   buttons_set_isrecording(0);
   window_set_resizable(1);
@@ -135,7 +144,7 @@ int recorder_frame()
 
   // won't work with SSAA
   // glGetTexImage(GL_TEXTURE_2D, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
-  
+
   glReadPixels(0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, data);
   last = data + size - row;
 
@@ -156,7 +165,7 @@ int recorder_frame()
   return 0;
 }
 
-int recorder_ftime()
+int recorder_isrec()
 {
-  return data ? ftime : 0;
+  return data ? 1 : 0;
 }
