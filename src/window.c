@@ -151,7 +151,12 @@ static gboolean on_press(GtkWidget *widget, GdkEventButton *event,
   clicking = 1;
   event->y = areah - event->y; // get same orientation as OpenGL
 
-  if (buttons_click(event->x, event->y) || click_bars(event->x, event->y))
+  if (buttons_click(event->x, event->y))
+    {
+      clicking = 0;
+      return TRUE;
+    }
+  else if (click_bars(event->x, event->y))
     return TRUE;
 
   return FALSE;

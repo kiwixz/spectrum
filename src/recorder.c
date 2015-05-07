@@ -32,7 +32,7 @@
 
 #define CODEC 'X', 'V', 'I', 'D'
 #define RECVIDEOFILE "/tmp/spectrum_rec_video.mkv"
-#define AUDIOADDER                     \
+#define AUDIOADDER                   \
   "xterm -e ffmpeg -i '"RECVIDEOFILE \
   "' -i '"RECAUDIOFILE "' -vcodec copy -shortest -y '%s' &"
 
