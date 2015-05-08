@@ -37,7 +37,7 @@
 static int        vol, muted;
 static gint64     position, duration;
 static char       *name;
-static GstElement *pipeline, *source, *equalizer, *tee, *spec, *volume, *valve;
+static GstElement *pipeline, *source, *equalizer, *spec, *tee, *volume, *valve;
 static GstBus     *bus;
 static GstPad     *rqueuepad;
 
@@ -140,10 +140,10 @@ int player_new(GMainLoop *loop)
   source = gst_element_factory_make("filesrc", NULL);
   decodebin = gst_element_factory_make("decodebin", NULL);
   conv = gst_element_factory_make("audioconvert", NULL);
-  tee = gst_element_factory_make("tee", NULL);
-  queue = gst_element_factory_make("queue", NULL);
   equalizer = gst_element_factory_make("equalizer-10bands", NULL);
   spec = gst_element_factory_make("spectrum", NULL);
+  tee = gst_element_factory_make("tee", NULL);
+  queue = gst_element_factory_make("queue", NULL);
   volume = gst_element_factory_make("volume", NULL);
   sink = gst_element_factory_make("autoaudiosink", NULL);
   rqueue = gst_element_factory_make("queue", NULL);
@@ -178,13 +178,13 @@ int player_new(GMainLoop *loop)
 
   // links
   bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
-  gst_bin_add_many(GST_BIN(pipeline), source, decodebin, conv, tee, queue,
-                   equalizer, spec, volume, sink, rqueue, valve, encoder,
-                   fsink, NULL);
+  gst_bin_add_many(GST_BIN(pipeline), source, decodebin, conv, equalizer, spec,
+                   tee, queue, volume, sink, rqueue, valve, encoder, fsink,
+                   NULL);
 
   if (!gst_element_link(source, decodebin)
-      || !gst_element_link(conv, tee)
-      || !gst_element_link_many(queue, equalizer, spec, volume, sink, NULL)
+      || !gst_element_link_many(conv, equalizer, spec, tee, NULL)
+      || !gst_element_link_many(queue, volume, sink, NULL)
       || !gst_element_link_many(rqueue, valve, encoder, fsink, NULL))
     {
       ERROR("Failed to link the audio pipeline");
