@@ -45,15 +45,6 @@ static void process_message(GstMessage *msg)
 {
   switch (GST_MESSAGE_TYPE(msg))
     {
-      case GST_MESSAGE_DURATION_CHANGED:
-      case GST_MESSAGE_STREAM_START:
-        {
-          if (!gst_element_query_duration(pipeline, GST_FORMAT_TIME, &duration))
-            duration = 0;
-
-          break;
-        }
-
       case GST_MESSAGE_ELEMENT:
         {
           const GstStructure *s;
@@ -131,8 +122,8 @@ static int set_name(const char *file)
 
 int player_new(GMainLoop *loop)
 {
-  float      configvol;
-  GstElement *decodebin, *conv, *queue, *sink,*rqueue, *encoder, *fsink;
+  float          configvol;
+  GstElement     *decodebin, *conv, *queue, *sink, *rqueue, *encoder, *fsink;
   GstPad         *queuepad;
   GstPadTemplate *padtemplate;
 
@@ -150,12 +141,12 @@ int player_new(GMainLoop *loop)
   decodebin = gst_element_factory_make("decodebin", NULL);
   conv = gst_element_factory_make("audioconvert", NULL);
   tee = gst_element_factory_make("tee", NULL);
-  queue = gst_element_factory_make("queue2", NULL);
+  queue = gst_element_factory_make("queue", NULL);
   equalizer = gst_element_factory_make("equalizer-10bands", NULL);
   spec = gst_element_factory_make("spectrum", NULL);
   volume = gst_element_factory_make("volume", NULL);
   sink = gst_element_factory_make("autoaudiosink", NULL);
-  rqueue = gst_element_factory_make("queue2", NULL);
+  rqueue = gst_element_factory_make("queue", NULL);
   valve = gst_element_factory_make("valve", NULL);
   encoder = gst_element_factory_make("wavenc", NULL);
   fsink = gst_element_factory_make("filesink", NULL);
@@ -169,8 +160,10 @@ int player_new(GMainLoop *loop)
     }
 
   // properties
+  g_object_set(G_OBJECT(queue), "silent", TRUE, NULL);
   g_object_set(G_OBJECT(spec), "bands", (guint)SPECBANDS,
                "threshold", (gint)MINDB, NULL);
+  g_object_set(G_OBJECT(rqueue), "silent", TRUE, NULL);
   g_object_set(G_OBJECT(valve), "drop", TRUE, NULL);
   g_object_set(G_OBJECT(fsink), "async", FALSE, "location", RECAUDIOFILE, NULL);
 
@@ -276,8 +269,10 @@ int player_play_file(const char *file)
   g_object_set(G_OBJECT(source), "location", file, NULL);
   gst_element_set_state(pipeline, GST_STATE_PLAYING);
 
+  duration = 0;
   particles_start();
   buttons_set_isplaying(1);
+
   return 0;
 }
 
@@ -347,7 +342,12 @@ float player_get_time_frac()
   gint64 pos;
 
   if (!duration)
-    return 0.0f;
+    {
+      gst_element_query_duration(pipeline, GST_FORMAT_TIME, &duration);
+
+      if (!duration)
+        return 0.0f;
+    }
 
   if (gst_element_query_position(pipeline, GST_FORMAT_TIME, &pos))
     position = pos;

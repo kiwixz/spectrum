@@ -1,6 +1,7 @@
 bin/
 *~
 TODO
+exec
 
 # files for testing
 *.m4a

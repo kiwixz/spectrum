@@ -137,18 +137,11 @@ int recorder_toggle()
 int recorder_frame()
 {
   int  i;
-  char *last, *flipped;
+  char *flipped, *last;
 
   if (!data)
     return 1;
 
-  // won't work with SSAA
-  // glGetTexImage(GL_TEXTURE_2D, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
-
-  glReadPixels(0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, data);
-  last = data + size - row;
-
-  // flip image vertically
   flipped = malloc(size);
   if (!flipped)
     {
@@ -156,12 +149,17 @@ int recorder_frame()
       return -1;
     }
 
-  for (i = 0; i < size; i += row)
-    memcpy(flipped + i, last - i, row);
+  glReadPixels(0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, flipped);
+  last = flipped + size - row;
 
-  cvSetData(img, flipped, row);
+  // flip image vertically
+  for (i = 0; i < size; i += row)
+    memcpy(data + i, last - i, row);
+
+  cvSetData(img, data, row);
   cvWriteFrame(writer, img);
 
+  free(flipped);
   return 0;
 }
 

@@ -29,3 +29,8 @@ There is a Makefile so you would compile and run it with only one command:
 ```
 make run
 ```
+
+## Shortcuts
+
+SPACE - play / pause
+ENTER - record / stop recording

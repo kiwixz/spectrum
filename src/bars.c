@@ -131,7 +131,7 @@ int bars_new()
     }
 
   // set all green values to 1.0f
-  for (i = 5 * SPECBANDS * 4 * 3 + 1; i < len + 3; i += 3)
+  for (i = 5 * SPECBANDS * 4 * 3 + 1; i < len; i += 3)
     vert[i] = 1.0f;
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboi);

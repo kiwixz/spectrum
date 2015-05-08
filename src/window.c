@@ -35,7 +35,7 @@
 static const int DOUBLEBUFFER = 0,
                  DEFAULTW = 1280,
                  DEFAULTH = 720;
-static const float FPSSTABILITY = 0.9999f;
+static const float FPSSTABILITY = 0.99993f;
 
 static GtkWidget *window, *area;
 static int       fps, fullscreen, areaw, areah, clicking, motionblur;
@@ -117,6 +117,9 @@ static int click_bars(int cx, int cy)
       return 1;
     }
 
+  if (recorder_isrec())
+    return 0;
+
   x = VOLBARXPX;
   xw = VOLBARXW * areaw;
   if ((cy < VOLBARYHPX) && (cy > VOLBARYPX) && (cx < xw) && (cx > x))
@@ -151,7 +154,7 @@ static gboolean on_press(GtkWidget *widget, GdkEventButton *event,
   clicking = 1;
   event->y = areah - event->y; // get same orientation as OpenGL
 
-  if (buttons_click(event->x, event->y))
+  if (!recorder_isrec() && buttons_click(event->x, event->y))
     {
       clicking = 0;
       return TRUE;
@@ -195,7 +198,7 @@ static int check_fps()
     }
 
   if (recorder_isrec())
-    while (diff < RECFTIME) // limit to the desired framerate
+    while (diff < RECFTIME) // limit to the target framerate
       {
         us = g_get_monotonic_time();
         diff = us - lastus;
@@ -287,10 +290,7 @@ int window_new(GMainLoop *mainloop)
   gtk_window_set_title(GTK_WINDOW(window), "Spectrum");
   gtk_window_set_geometry_hints(GTK_WINDOW(window), window,
                                 &geom, GDK_HINT_MIN_SIZE);
-  if (config->winw && config->winh)
-    gtk_window_set_default_size(GTK_WINDOW(window), config->winw, config->winh);
-  else
-    gtk_window_set_default_size(GTK_WINDOW(window), DEFAULTW, DEFAULTH);
+  gtk_window_set_default_size(GTK_WINDOW(window), DEFAULTW, DEFAULTH);
 
   g_signal_connect(window, "window-state-event",
                    G_CALLBACK(on_state_change), NULL);
@@ -301,6 +301,8 @@ int window_new(GMainLoop *mainloop)
   gtk_window_add_accel_group(GTK_WINDOW(window), accel);
   gtk_accel_group_connect(accel, GDK_KEY_space, 0, 0,
                           g_cclosure_new(player_toggle, 0, 0));
+  gtk_accel_group_connect(accel, GDK_KEY_Return, 0, 0,
+                          g_cclosure_new((void *)recorder_toggle, 0, 0));
 
   // area
   gtk_container_add(GTK_CONTAINER(window), area);
@@ -336,6 +338,9 @@ int window_new(GMainLoop *mainloop)
   g_signal_connect(area, "configure-event", G_CALLBACK(on_configure), NULL);
 
   gtk_widget_show_all(window);
+
+  if (config->winw && config->winh)
+    window_resize(config->winw, config->winh);
 
   if (player_new(loop))
     return -1;
@@ -386,5 +391,8 @@ void window_set_resizable(int b)
 
 void window_resize(int w, int h)
 {
-  gtk_widget_set_size_request(window, w, h);
+  gint winw, winh;
+
+  gtk_window_get_size(GTK_WINDOW(window), &winw, &winh);
+  gtk_widget_set_size_request(window, w + winw - areaw, h + winh - areah);
 }

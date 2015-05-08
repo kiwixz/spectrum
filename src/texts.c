@@ -23,6 +23,7 @@
 #include <time.h>
 #include "texts.h"
 #include "player.h"
+#include "recorder.h"
 #include "render.h"
 #include "shaders.h"
 #include "shared.h"
@@ -187,14 +188,6 @@ int texts_render()
 
   shaders_use(PROG_DIRECTTEX);
 
-  // fps
-  snprintf(buffer, sizeof(buffer), "fps: %d (%ld \x95s)",
-           window_get_fps(), window_get_ftime());
-  glVertexAttrib4f(COLOR_ATTRIB, 0.8f, 0.8f, 0.8f, 1.0f);
-  if (render_string(buffer, FPSX, render_itofy(FPSYPX), 0.0f,
-                    render_itofx(FPSWPX), render_itofy(FPSHPX), 0.0f))
-    return -1;
-
   // title
   name = player_get_name();
   if (name[0] != '\0')
@@ -229,6 +222,17 @@ int texts_render()
                       TIMEW, TIMEH, 0.0f))
       return -1;
 
+
+  // fps
+  snprintf(buffer, sizeof(buffer), "fps: %d (%ld \x95s)",
+           window_get_fps(), window_get_ftime());
+  glVertexAttrib4f(COLOR_ATTRIB, 0.8f, 0.8f, 0.8f, 1.0f);
+  if (render_string(buffer, FPSX, render_itofy(FPSYPX), 0.0f,
+                    render_itofx(FPSWPX), render_itofy(FPSHPX), 0.0f))
+    return -1;
+
+  if (recorder_isrec())
+    return 0;
 
   // volume
   snprintf(buffer, sizeof(buffer), "%d %%", player_get_volume());

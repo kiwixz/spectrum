@@ -221,13 +221,18 @@ static int render_frame_fbo()
   glViewport(0, 0, ssaaw, ssaah);
 
   render_two_passes(&particles_render, PROG_PARTICLES);
+
   timebar_render();
-  volbar_render();
+  if (!recorder_isrec())
+    {
+      volbar_render();
+      buttons_render();
+    }
+
   if (texts_render())
     return -1;
 
   render_two_passes(&bars_render, PROG_BARS);
-  buttons_render();
 
   glViewport(0, 0, window_get_w(), window_get_h());
 
