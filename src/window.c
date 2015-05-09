@@ -191,19 +191,17 @@ static int check_fps()
 
   us = g_get_monotonic_time();
   diff = us - lastus;
-  if (ftime && (diff < ftime * FPSSTABILITY))
-    {
-      ftime *= FPSSTABILITY;
-      return 0;
-    }
-
   if (recorder_isrec())
     while (diff < RECFTIME) // limit to the target framerate
       {
         us = g_get_monotonic_time();
         diff = us - lastus;
       }
-
+  else if (ftime && (diff < ftime * FPSSTABILITY))
+    {
+      ftime *= FPSSTABILITY;
+      return 0;
+    }
 
   lastus = us;
   ftime = diff;
