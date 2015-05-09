@@ -40,6 +40,7 @@ static const float FPSSTABILITY = 0.99993f;
 static GtkWidget *window, *area;
 static int       fps, fullscreen, areaw, areah, clicking, motionblur;
 static long      ftime;
+static gint64    lastus;
 static GMainLoop *loop;
 
 static gboolean on_configure(GtkWidget *widget,
@@ -52,6 +53,7 @@ static gboolean on_configure(GtkWidget *widget,
   areaw = area->allocation.width;
   areah = area->allocation.height;
   motionblur = 0;
+  lastus = g_get_monotonic_time();
 
   gldrawable = gtk_widget_get_gl_drawable(area);
   if (!gdk_gl_drawable_gl_begin(gldrawable, gtk_widget_get_gl_context(area)))
@@ -183,9 +185,6 @@ static gboolean on_state_change(GtkWidget *widget,
 
 static int check_fps()
 {
-  static gint64 lastus;
-
-  int    nfps;
   long   diff;
   gint64 us;
 
@@ -197,50 +196,29 @@ static int check_fps()
         us = g_get_monotonic_time();
         diff = us - lastus;
       }
-  else if (ftime && (diff < ftime * FPSSTABILITY))
+
+
+  else if (diff < ftime * FPSSTABILITY)
     {
       ftime *= FPSSTABILITY;
-      return 0;
+      return 1;
     }
 
   lastus = us;
   ftime = diff;
-  nfps = 1000000L / diff;
-  if (!nfps)
-    {
-      fps = 1;
-      return 2;
-    }
+  fps = 1000000L / diff;
 
-  if ((nfps > fps + 1) || (nfps < fps - 1))
-    {
-      fps = nfps;
-      return 2;
-    }
-  else
-    {
-      fps = nfps;
-      return 1;
-    }
+  return 0;
 }
 
 static gboolean redraw(gpointer nul)
 {
   GdkGLDrawable *gldrawable;
 
-  switch (check_fps())
-    {
-      case 0:
-        {
-          return TRUE;
-        }
+  if (check_fps())
+    return TRUE;
 
-      case 2:
-        {
-          player_set_fps(fps);
-          break;
-        }
-    }
+  player_refresh_fps();
 
   gldrawable = gtk_widget_get_gl_drawable(area);
   if (!gdk_gl_drawable_gl_begin(gldrawable, gtk_widget_get_gl_context(area)))
@@ -361,12 +339,12 @@ int window_get_h()
 
 int window_get_fps()
 {
-  return fps;
+  return fps ? fps : 1;
 }
 
 long window_get_ftime()
 {
-  return ftime;
+  return ftime ? ftime : 1;
 }
 
 int window_is_fullscreen()

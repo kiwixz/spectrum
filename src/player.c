@@ -37,9 +37,10 @@
 static int        vol, muted;
 static gint64     position, duration;
 static char       *name;
-static GstElement *pipeline, *source, *equalizer, *spec, *tee, *volume, *valve;
-static GstBus     *bus;
-static GstPad     *rqueuepad;
+static GstElement *pipeline, *source, *equalizer, *spec,
+                  *tee, *queue, *volume, *valve;
+static GstBus *bus;
+static GstPad *rqueuepad;
 
 static void process_message(GstMessage *msg)
 {
@@ -123,7 +124,7 @@ static int set_name(const char *file)
 int player_new(GMainLoop *loop)
 {
   float          configvol;
-  GstElement     *decodebin, *conv, *queue, *sink, *rqueue, *encoder, *fsink;
+  GstElement     *decodebin, *conv, *sink, *rqueue, *encoder, *fsink;
   GstPad         *queuepad;
   GstPadTemplate *padtemplate;
 
@@ -160,12 +161,18 @@ int player_new(GMainLoop *loop)
     }
 
   // properties
-  g_object_set(G_OBJECT(queue), "silent", TRUE, NULL);
+  g_object_set(G_OBJECT(queue), "silent", (gboolean)TRUE,
+               "max-size-buffers", (guint)0,
+               "max-size-bytes", (guint)0, NULL);
   g_object_set(G_OBJECT(spec), "bands", (guint)SPECBANDS,
                "threshold", (gint)MINDB, NULL);
-  g_object_set(G_OBJECT(rqueue), "silent", TRUE, NULL);
-  g_object_set(G_OBJECT(valve), "drop", TRUE, NULL);
-  g_object_set(G_OBJECT(fsink), "async", FALSE, "location", RECAUDIOFILE, NULL);
+  g_object_set(G_OBJECT(rqueue), "silent", (gboolean)TRUE,
+               "max-size-buffers", (guint)0,
+               "max-size-bytes", (guint)0,
+               "max-size-time", (guint64)(1000L * RECFTIME), NULL);
+  g_object_set(G_OBJECT(valve), "drop", (gboolean)TRUE, NULL);
+  g_object_set(G_OBJECT(fsink), "async", (gboolean)FALSE,
+               "location", RECAUDIOFILE, NULL);
 
   configvol = config_get()->vol;
   if (configvol)
@@ -236,9 +243,13 @@ void player_bus_pop()
     }
 }
 
-void player_set_fps(int fps)
+void player_refresh_fps()
 {
-  g_object_set(G_OBJECT(spec), "interval", (guint64)(1000000000LL / fps), NULL);
+  guint64 nsftime;
+
+  nsftime = 1000L * window_get_ftime();
+  g_object_set(G_OBJECT(spec), "interval", nsftime, NULL);
+  g_object_set(G_OBJECT(queue), "max-size-time", nsftime, NULL);
 }
 
 void player_toggle()
@@ -360,12 +371,12 @@ void player_toggle_mute()
   if (muted)
     {
       muted = 0;
-      g_object_set(G_OBJECT(volume), "mute", FALSE, NULL);
+      g_object_set(G_OBJECT(volume), "mute", (gboolean)FALSE, NULL);
     }
   else
     {
       muted = 1;
-      g_object_set(G_OBJECT(volume), "mute", TRUE, NULL);
+      g_object_set(G_OBJECT(volume), "mute", (gboolean)TRUE, NULL);
     }
   buttons_set_ismuted(muted);
 }
@@ -396,11 +407,11 @@ void player_refresh_equalizer()
 
 void player_record_start()
 {
-  g_object_set(G_OBJECT(valve), "drop", FALSE, NULL);
+  g_object_set(G_OBJECT(valve), "drop", (gboolean)FALSE, NULL);
 }
 
 void player_record_stop()
 {
   gst_element_send_event(valve, gst_event_new_eos());
-  g_object_set(G_OBJECT(valve), "drop", TRUE, NULL);
+  g_object_set(G_OBJECT(valve), "drop", (gboolean)TRUE, NULL);
 }

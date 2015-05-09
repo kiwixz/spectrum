@@ -26,7 +26,7 @@ int player_new(GMainLoop *loop);
 void player_delete();
 
 void player_bus_pop();
-void player_set_fps(int fps);
+void player_refresh_fps();
 
 void player_toggle();
 int player_play_file(const char *file);

@@ -41,9 +41,10 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
 
   if (argc > 2)
-    ERROR("Too much arguments");
+    WARNING("Too much arguments");
   else if (argc == 2)
-    player_play_file(argv[1]);
+    if(player_play_file(argv[1]))
+      return EXIT_FAILURE;
 
   g_main_loop_run(loop);
 
