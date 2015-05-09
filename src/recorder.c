@@ -38,7 +38,8 @@
 
 static const int CMDLEN = 8192;
 
-static int           width, height, row, size;
+static int           secfps, width, height, row, size;
+static long          lastsec;
 static CvVideoWriter *writer;
 static IplImage      *img;
 static char          *data, *file;
@@ -64,6 +65,11 @@ static int ask_file()
   gtk_widget_destroy(fc);
 
   return 0;
+}
+
+static long get_sec()
+{
+  return g_get_monotonic_time() / 1000000L;
 }
 
 int recorder_start()
@@ -100,6 +106,8 @@ int recorder_start()
       return -1;
     }
 
+  lastsec = get_sec();
+
   buttons_set_isrecording(1);
   player_record_start();
   return 0;
@@ -119,6 +127,8 @@ void recorder_stop()
 
   free(data);
   data = NULL;
+  secfps = 0;
+
   buttons_set_isrecording(0);
   window_set_resizable(1);
 }
@@ -134,6 +144,38 @@ int recorder_toggle()
     return recorder_start();
 }
 
+static void write_frame()
+{
+  cvSetData(img, data, row);
+  cvWriteFrame(writer, img);
+}
+
+static void check_fps()
+{
+  long sec;
+
+  sec = get_sec();
+  if (sec > lastsec)
+    {
+      if (!secfps)
+        {
+          lastsec = sec;
+          return;
+        }
+
+      while (secfps < RECFPS)
+        {
+          write_frame();
+          ++secfps;
+        }
+
+      secfps = 1;
+      lastsec = sec;
+    }
+  else
+    ++secfps;
+}
+
 int recorder_frame()
 {
   int  i;
@@ -141,6 +183,8 @@ int recorder_frame()
 
   if (!data)
     return 1;
+
+  check_fps();
 
   flipped = malloc(size);
   if (!flipped)
@@ -156,9 +200,7 @@ int recorder_frame()
   for (i = 0; i < size; i += row)
     memcpy(data + i, last - i, row);
 
-  cvSetData(img, data, row);
-  cvWriteFrame(writer, img);
-
+  write_frame();
   free(flipped);
   return 0;
 }
