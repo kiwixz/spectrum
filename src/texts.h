@@ -25,4 +25,7 @@ void texts_delete();
 
 int texts_render();
 
+int texts_refresh_title();
+int texts_refresh_volume();
+
 #endif

@@ -26,6 +26,7 @@
 #include "particles.h"
 #include "shared.h"
 #include "spectrum.h"
+#include "texts.h"
 #include "window.h"
 
 #ifdef _WIN32
@@ -118,6 +119,7 @@ static int set_name(const char *file)
     }
   name[len] = '\0';
 
+  texts_refresh_title();
   return 0;
 }
 
@@ -180,6 +182,7 @@ int player_new(GMainLoop *loop)
   else
     vol = 100;
 
+  texts_refresh_volume();
   g_object_set(G_OBJECT(volume), "volume", (gdouble)(vol / 100.0f), NULL);
   player_refresh_equalizer();
 
@@ -385,6 +388,7 @@ void player_set_volume(int v)
 {
   vol = v;
   g_object_set(G_OBJECT(volume), "volume", (gdouble)(v / 100.0f), NULL);
+  texts_refresh_volume();
 }
 
 int player_get_volume()

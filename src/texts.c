@@ -36,6 +36,22 @@
 #define TIMEY 0.05f
 #define TIMEW 0.2f
 
+#define TEXTSLEN 4
+typedef enum
+{
+  TEXT_FPS = 0,
+  TEXT_TIME = 1,
+  TEXT_TITLE = 2,
+  TEXT_VOLUME = 3
+} Text;
+typedef struct
+{
+  int      len;
+  GLfloat  *vert;
+  GLushort *id;
+  GLenum   usage;
+} TextInfo;
+
 static const int FPSYPX = -16,
                  FPSWPX = 144,
                  FPSHPX = 16;
@@ -56,20 +72,26 @@ static const GLushort VBOID[6] = {
   0, 1, 2, 2, 3, 0
 };
 
-static GLuint vbo, vboi;
+static GLuint   vbos[TEXTSLEN], vboids[TEXTSLEN];
+static TextInfo texts[TEXTSLEN];
 
 int texts_new()
 {
-  glGenBuffers(1, &vbo);
-  glGenBuffers(1, &vboi);
+  texts[TEXT_FPS].usage = GL_STREAM_DRAW;
+  texts[TEXT_TIME].usage = GL_STREAM_DRAW;
+  texts[TEXT_TITLE].usage = GL_STATIC_DRAW;
+  texts[TEXT_VOLUME].usage = GL_STATIC_DRAW;
+
+  glGenBuffers(TEXTSLEN, vbos);
+  glGenBuffers(TEXTSLEN, vboids);
 
   return 0;
 }
 
 void texts_delete()
 {
-  glDeleteBuffers(1, &vbo);
-  glDeleteBuffers(1, &vboi);
+  glDeleteBuffers(TEXTSLEN, vbos);
+  glDeleteBuffers(TEXTSLEN, vboids);
 }
 
 static void add_letter(int letter, int index,
@@ -102,30 +124,29 @@ static void add_letter(int letter, int index,
 #undef TEXCOORD
 }
 
-static int render_string(const char *text,
+static int text_generate(Text t, const char *text,
                          float x, float y, float z,
                          float w, float h, float d)
 {
-  int      i, isc, len, tlen;
-  float    lx, lw;
-  GLfloat  *vert, *verttxc;
-  GLushort *id;
+  int     i, isc, len;
+  float   lx, lw;
+  GLfloat *verttxc;
 
   len = strlen(text);
-  tlen = 0;
+  texts[t].len = 0;
   for (i = 0; i < len; ++i)
     if (text[i] != ' ')
-      ++tlen;
+      ++texts[t].len;
 
 
-  vert = malloc(4 * (3 + 2) * tlen * sizeof(GLfloat));
-  id = malloc(6 * tlen * sizeof(GLushort));
-  if (!vert || !id)
+  texts[t].vert = malloc(4 * (3 + 2) * texts[t].len * sizeof(GLfloat));
+  texts[t].id = malloc(6 * texts[t].len * sizeof(GLushort));
+  if (!texts[t].vert || !texts[t].id)
     {
       ERROR("Failed to malloc vertices of texts vbo for: '%s'", text);
       return -1;
     }
-  verttxc = vert + 4 * 3 * tlen;
+  verttxc = texts[t].vert + 4 * 3 * texts[t].len;
 
   lw = w / len;
   lx = x;
@@ -143,7 +164,7 @@ static int render_string(const char *text,
           continue;
         }
 
-      add_letter(text[i + isc], i, vert, verttxc,
+      add_letter(text[i + isc], i, texts[t].vert, verttxc,
                  lx, y, z,
                  lx + lw, y + h, z + d);
       lx += lw;
@@ -151,94 +172,160 @@ static int render_string(const char *text,
       offset = 6 * i;
       inc = 4 * i;
       for (j = 0; j < 6; ++j)
-        id[offset + j] = VBOID[j] + inc;
+        texts[t].id[offset + j] = VBOID[j] + inc;
     }
-
-  textures_bind(TEX_FONT);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboi);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * tlen * sizeof(GLushort),
-               id, GL_STREAM_DRAW);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, 4 * (3 + 2) * tlen * sizeof(GLfloat),
-               vert, GL_STREAM_DRAW);
-
-  glEnableVertexAttribArray(POSITION_ATTRIB);
-  glEnableVertexAttribArray(TEXCOORD_ATTRIB);
-  glVertexAttribPointer(POSITION_ATTRIB, 3, GL_FLOAT, GL_FALSE, 0, 0);
-  glVertexAttribPointer(TEXCOORD_ATTRIB, 2, GL_FLOAT, GL_FALSE, 0,
-                        (GLvoid *)(4 * 3 * tlen * sizeof(GLfloat)));
-
-  glDrawElements(GL_TRIANGLES, 6 * tlen, GL_UNSIGNED_SHORT, 0);
-
-  glDisableVertexAttribArray(POSITION_ATTRIB);
-  glDisableVertexAttribArray(TEXCOORD_ATTRIB);
-
-  free(vert);
-  free(id);
 
   return 0;
 }
 
-int texts_render()
+static void text_bind(Text t)
 {
-  int        len;
-  float      w, h, ratio;
-  char       buffer[64];
-  const char *name;
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboids[t]);
+  glBindBuffer(GL_ARRAY_BUFFER, vbos[t]);
+}
 
-  shaders_use(PROG_DIRECTTEX);
+static void text_bind_upload(Text t)
+{
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboids[t]);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * texts[t].len * sizeof(GLushort),
+               texts[t].id, texts[t].usage);
+  glBindBuffer(GL_ARRAY_BUFFER, vbos[t]);
+  glBufferData(GL_ARRAY_BUFFER, 4 * (3 + 2) * texts[t].len * sizeof(GLfloat),
+               texts[t].vert, texts[t].usage);
+}
 
-  // title
-  name = player_get_name();
-  if (name[0] != '\0')
-    {
-      len = strlen(name);
-      ratio = TITLEMAXW / TITLEMAXH / len;
-      if (ratio > TITLEMAXLWHRATIO) // w too large
-        {
-          w = TITLEMAXH * TITLEMAXLWHRATIO * len;
-          h = TITLEMAXH;
-        }
-      else if (ratio < TITLEMINLWHRATIO) // h too large
-        {
-          w = TITLEMAXW;
-          h = TITLEMAXW / TITLEMINLWHRATIO / len;
-        }
-      else
-        {
-          w = TITLEMAXW;
-          h = TITLEMAXH;
-        }
+static void text_render(Text t)
+{
+  glEnableVertexAttribArray(POSITION_ATTRIB);
+  glEnableVertexAttribArray(TEXCOORD_ATTRIB);
+  glVertexAttribPointer(POSITION_ATTRIB, 3, GL_FLOAT, GL_FALSE, 0, 0);
+  glVertexAttribPointer(TEXCOORD_ATTRIB, 2, GL_FLOAT, GL_FALSE, 0,
+                        (GLvoid *)(4 * 3 * texts[t].len * sizeof(GLfloat)));
 
-      glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f, 1.0f);
-      if (render_string(name, TITLEX, TITLETOPY - h, 0.0f, w, h, 0.0f))
-        return -1;
-    }
+  glDrawElements(GL_TRIANGLES, 6 * texts[t].len, GL_UNSIGNED_SHORT, 0);
 
-  // time
+  glDisableVertexAttribArray(POSITION_ATTRIB);
+  glDisableVertexAttribArray(TEXCOORD_ATTRIB);
+}
+
+static void render_title()
+{
+  glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f, 1.0f);
+  text_bind(TEXT_TITLE);
+  text_render(TEXT_TITLE);
+}
+
+static int render_time()
+{
+  char buffer[32];
+
   player_get_time(buffer, sizeof(buffer));
-  if (buffer[0] != '\0')
-    if (render_string(buffer, TIMEX, TIMEY, 0.0f,
-                      TIMEW, TIMEH, 0.0f))
-      return -1;
+  if (buffer[0] == '\0')
+    return 0;
 
+  if (text_generate(TEXT_TIME, buffer, TIMEX, TIMEY, 0.0f,
+                    TIMEW, TIMEH, 0.0f))
+    return -1;
 
-  // fps
+  glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f, 1.0f);
+  text_bind_upload(TEXT_TIME);
+  text_render(TEXT_TIME);
+
+  return 0;
+}
+
+static int render_fps()
+{
+  char buffer[32];
+
   snprintf(buffer, sizeof(buffer), "fps: %d (%ld \x95s)",
            window_get_fps(), window_get_ftime());
-  glVertexAttrib4f(COLOR_ATTRIB, 0.8f, 0.8f, 0.8f, 1.0f);
-  if (render_string(buffer, FPSX, render_itofy(FPSYPX), 0.0f,
+  if (text_generate(TEXT_FPS, buffer, FPSX, render_itofy(FPSYPX), 0.0f,
                     render_itofx(FPSWPX), render_itofy(FPSHPX), 0.0f))
+    return -1;
+
+  glVertexAttrib4f(COLOR_ATTRIB, 0.8f, 0.8f, 0.8f, 1.0f);
+  text_bind_upload(TEXT_FPS);
+  text_render(TEXT_FPS);
+
+  return 0;
+}
+
+static void render_volume()
+{
+  glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f, 1.0f);
+  text_bind(TEXT_VOLUME);
+  text_render(TEXT_VOLUME);
+}
+
+int texts_render()
+{
+  shaders_use(PROG_DIRECTTEX);
+  textures_bind(TEX_FONT);
+
+  render_title();
+  if (render_time() || render_fps())
     return -1;
 
   if (recorder_isrec())
     return 0;
 
-  // volume
-  snprintf(buffer, sizeof(buffer), "%d %%", player_get_volume());
-  if (render_string(buffer, render_itofx(VOLBARXPX),
-                    render_itofy(VOLBARYHPX), 0.0f, VOLW, VOLH, 0.0f))
+  render_volume();
+
+  return 0;
+}
+
+int texts_refresh_title()
+{
+  int        len;
+  float      w, h, ratio;
+  const char *name;
+
+  name = player_get_name();
+  if (name[0] == '\0')
+    return 0;
+
+  len = strlen(name);
+  ratio = TITLEMAXW / TITLEMAXH / len;
+  if (ratio > TITLEMAXLWHRATIO) // if w too large
+    {
+      w = TITLEMAXH * TITLEMAXLWHRATIO * len;
+      h = TITLEMAXH;
+    }
+  else if (ratio < TITLEMINLWHRATIO) // if h too large
+    {
+      w = TITLEMAXW;
+      h = TITLEMAXW / TITLEMINLWHRATIO / len;
+    }
+  else
+    {
+      w = TITLEMAXW;
+      h = TITLEMAXH;
+    }
+
+  glVertexAttrib4f(COLOR_ATTRIB, 1.0f, 1.0f, 1.0f, 1.0f);
+  if (text_generate(TEXT_TITLE, name,
+                    TITLEX, TITLETOPY - h, 0.0f, w, h, 0.0f))
     return -1;
+
+  text_bind_upload(TEXT_TITLE);
+  text_render(TEXT_TITLE);
+
+  return 0;
+}
+
+int texts_refresh_volume()
+{
+  char buffer[8];
+
+  snprintf(buffer, sizeof(buffer), "%d %%", player_get_volume());
+  if (text_generate(TEXT_VOLUME, buffer, render_itofx(VOLBARXPX),
+                    render_itofy(VOLBARYHPX), 0.0f,
+                    VOLW, VOLH, 0.0f))
+    return -1;
+
+  text_bind_upload(TEXT_VOLUME);
+  text_render(TEXT_VOLUME);
 
   return 0;
 }
