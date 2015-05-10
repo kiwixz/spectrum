@@ -155,14 +155,19 @@ static void check_fps()
   long sec;
 
   sec = get_sec();
-  if (sec > lastsec)
-    {
-      if (!secfps)
-        {
-          lastsec = sec;
-          return;
-        }
+  if (sec == lastsec)
+    ++secfps;
+  else if (!secfps)
+    if (lastsec == sec - 2)
+      {
+        secfps = 1;
+        lastsec = sec;
+      }
+    else
+      lastsec = sec - 1;
 
+  else if (sec > lastsec)
+    {
       while (secfps < RECFPS)
         {
           write_frame();
@@ -172,8 +177,6 @@ static void check_fps()
       secfps = 1;
       lastsec = sec;
     }
-  else
-    ++secfps;
 }
 
 int recorder_frame()
