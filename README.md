@@ -6,8 +6,6 @@
 
 This is a simple audio spectrum visualizer written in C using GStreamer. It's only tested on Linux (more precisely Arch Linux).
 
-![Loading screenshot...](https://github.com/kiwixz/spectrum/blob/master/screenshot.png "Version of April 20, 2015")
-
 ## What you need
 
 You need an usual development environnement (a C compiler, GNU Make, etc). The Makefile use `c99` as an alias for the compiler. You need youtube-dl to download audio from URLs and FFmpeg for recording a video with sound.
@@ -32,5 +30,5 @@ make run
 
 ## Shortcuts
 
-SPACE - play / pause
-ENTER - record / stop recording
+- SPACE - play / pause
+- ENTER - record / stop recording
