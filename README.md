@@ -32,3 +32,6 @@ make run
 
 - SPACE - play / pause
 - ENTER - record / stop recording
+
+## License
+This program is protected by the **GNU GENERAL PUBLIC LICENSE**. This repositery should contain a file named _LICENSE_.
